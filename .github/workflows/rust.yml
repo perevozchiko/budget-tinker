@@ -47,12 +47,34 @@ jobs:
             exit 1
           fi
 
+      # cargo-deny 0.20.2 uses this stable cache directory for the official DB URL.
+      # Fetch via GitHub Actions so cargo-deny's git CLI does not need to refetch main.
+      - name: Check out fresh official RustSec advisory database
+        uses: actions/checkout@v4
+        with:
+          repository: RustSec/advisory-db
+          ref: main
+          path: target/release-audit/advisory-dbs/advisory-db-3157b0e258782691
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify RustSec advisory checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          db="target/release-audit/advisory-dbs/advisory-db-3157b0e258782691"
+          test -d "$db/crates"
+          test -f "$db/README.md"
+          git -C "$db" rev-parse --verify HEAD
+          git -C "$db" show -s --format='RustSec database: %H (%cI)' HEAD
       - name: Dependency licenses and advisory audit
         shell: bash
         run: |
           cargo install cargo-deny --version 0.20.2 --locked --root "$PWD/target/audit-tools" --target-dir "$PWD/target/audit-tools-build"
           python3 scripts/test-release-tools.py
-          python3 scripts/audit-dependencies.py
+          # The official DB was checked out fresh in this same CI run.
+          # --offline prevents the failing cargo-deny internal git fetch;
+          # cargo-deny still enforces the database-staleness limit and advisories.
+          python3 scripts/audit-dependencies.py --offline
       - name: Upload dependency audit diagnostics on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

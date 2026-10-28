@@ -54,6 +54,17 @@ class ReleasePolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unapproved direct dependers'):
             deps.verify_advisory_scope(metadata, datetime.date(2026, 10, 28))
 
+    def test_manual_ci_fetches_rustsec_before_offline_audit(self):
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertIn('repository: RustSec/advisory-db', workflow)
+        self.assertIn('ref: main', workflow)
+        self.assertIn('path: target/release-audit/advisory-dbs/advisory-db-3157b0e258782691', workflow)
+        self.assertIn('persist-credentials: false', workflow)
+        self.assertIn('python3 scripts/audit-dependencies.py --offline', workflow)
+        self.assertIn('  workflow_dispatch:', workflow)
+        self.assertNotIn('  push:', workflow)
+        self.assertNotIn('  pull_request:', workflow)
+
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
         for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:
             self.assertFalse(source.excluded(Path(name)), name)

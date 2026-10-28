@@ -38,8 +38,17 @@ python3 scripts/audit-release.py
 ```
 
 `audit-dependencies.py --offline` reuses an already downloaded, sufficiently fresh database.
-The script records tool version, database revision/date, exact exit codes and diagnostic
-logs under target/release-audit. The manual CI validation job uses this same entry point.
+In manual GitHub Actions, `actions/checkout@v4` explicitly downloads the current official
+`RustSec/advisory-db` `main` branch into cargo-deny 0.20.2's expected cache directory
+(`target/release-audit/advisory-dbs/advisory-db-3157b0e258782691`) before invoking
+`audit-dependencies.py --offline`. This avoids a Git transport/ref-fetch failure in
+cargo-deny while retaining the normal advisory evaluation and its database-staleness guard.
+The database is downloaded afresh for each CI run: a failed checkout blocks CI rather than
+silently using an old snapshot. The directory name is tied to the pinned cargo-deny 0.20.2
+cache naming; update it only after verifying a later cargo-deny version's actual behavior.
+For local runs, the default command still fetches RustSec itself, and `--offline` requires
+a previously fetched database. The script records tool version, database revision/date,
+exact exit codes and diagnostic logs under target/release-audit.
 The wrapper fails if the approved dependency versions/direct depender change or the UTC
 review deadline has arrived. Every advisory except RUSTSEC-2026-0192 remains blocking;
 `unmaintained = "all"`, `unsound = "all"`, and `yanked = "deny"` are explicit.
