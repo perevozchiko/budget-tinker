@@ -1,0 +1,29 @@
+Date,Payee,Memo,Amount,Cleared
+04/15/2026,Boundary Bank,date -11,-10.01,Cleared
+04/15/2026,Boundary Bank,date -10,-10.02,Cleared
+04/15/2026,Boundary Bank,date -1,-10.03,Cleared
+04/15/2026,Boundary Bank,date +0,-10.04,Cleared
+04/15/2026,Boundary Bank,date +1,-10.05,Cleared
+04/15/2026,Boundary Bank,date +10,-10.06,Cleared
+04/15/2026,Boundary Bank,date +11,-10.07,Cleared
+04/15/2026,Boundary Bank,Cleared,-10.08,Cleared
+04/15/2026,Boundary Bank,Reconciled,-10.09,Cleared
+04/15/2026,Boundary Bank,nearest date beats payee,-10.10,Cleared
+04/15/2026,Boundary Bank,payee breaks date tie,-10.11,Cleared
+04/15/2026,Boundary Bank,identical candidates,-10.12,Cleared
+04/15/2026,Boundary Bank,check -61,-10.13,Cleared
+04/15/2026,Boundary Bank,check -60,-10.14,Cleared
+04/15/2026,Boundary Bank,check +60,-10.15,Cleared
+04/15/2026,Boundary Bank,check +61,-10.16,Cleared
+04/15/2026,Boundary Bank,different check at 11 days,-10.17,Cleared
+04/15/2026,Boundary Bank,check beats nearest date,-10.18,Cleared
+04/15/2026,Boundary Bank,amount differs one cent,-99.98,Cleared
+04/15/2026,Boundary Bank,split parent,-10.20,Cleared
+04/15/2026,Boundary Bank,imported FITID,-10.21,Cleared
+04/15/2026,Boundary Bank,imported no ID,-10.22,Cleared
+04/15/2026,Boundary Bank,positive inflow,10.23,Cleared
+04/15/2026,Boundary Bank,opposite sign,-10.24,Cleared
+04/15/2026,Boundary Bank,different account,-10.25,Cleared
+04/15/2026,Boundary Bank,ordinary transfer,-10.26,Cleared
+04/15/2026,Boundary Bank,split transfer counterpart,-10.27,Cleared
+04/15/2026,Boundary Bank,already matched,-10.28,Cleared

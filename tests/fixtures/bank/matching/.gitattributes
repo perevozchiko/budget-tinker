@@ -1,0 +1,2 @@
+# Preserve the exact CRLF statement used in the live reference import.
+statement.csv -text whitespace=cr-at-eol

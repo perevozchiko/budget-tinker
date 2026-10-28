@@ -1,0 +1,33 @@
+BudgetTinker — prepared local source tree
+
+Copyright (c) 2026 BudgetTinker contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option.
+See LICENSE-MIT and LICENSE-APACHE. Third-party grants remain separate.
+
+Third-party components keep their own terms and notices. The complete 327-crate
+inventory, notice hashes, declarations, and upstream sources are in
+third-party/inventory.json inside distribution Notices/, or docs/third-party/
+in source. Alternative MIT/Apache grants are selected where available; no LGPL
+branch is selected. License declarations do not replace embedded component terms.
+
+Embedded fonts from epaint_default_fonts 0.32.3:
+- Hack Regular: Source Foundry / Bitstream Vera / DejaVu; MIT, Bitstream Vera
+  conditions and public-domain contributions; Hack-Regular.txt.
+- Ubuntu Light: Canonical, Ubuntu Font Licence 1.0; UFL.txt.
+- Noto Emoji: Google / Noto, SIL Open Font License 1.1; OFL.txt.
+- emoji-icon-font: John Slegers, MIT; emoji-icon-font-mit-license.txt.
+These files are under third-party/epaint_default_fonts-0.32.3/ in distribution
+Notices/, or docs/third-party/epaint_default_fonts-0.32.3/ in source.
+
+Bundled SQLite 3.50.2: public-domain dedication, retained in
+libsqlite3-sys-0.35.0/SQLITE-PUBLIC-DOMAIN.txt beside its MIT wrapper notice.
+SQLCipher is not enabled. Other Unicode/BSD/ISC/Zlib/Boost/MIT/Apache notices
+remain in their component directories. Apple frameworks, system libraries and
+build tools are not relicensed as project code.
+
+Artwork was generated with AI assistance and modified for this project.
+Project artwork is distributed under MIT OR Apache-2.0 to the extent the project
+can grant rights; see assets/LICENSE.md in
+source, or BRANDING-LICENSE.md in distribution Notices/, and ICON-EDIT.md.
+No exclusive copyright, registered trademark or guaranteed uniqueness is claimed.
+BudgetTinker is an independent project.

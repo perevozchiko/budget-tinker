@@ -1,0 +1,136 @@
+name: Rust checks and desktop builds
+
+# Start this workflow only via Actions -> Run workflow.
+# Commits and pull requests must not trigger release builds.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Rust checks
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Formatting, tests, Clippy and examples
+        shell: bash
+        run: |
+          set +e
+          cargo fmt --all --check
+          format_status=$?
+          cargo test --locked --quiet
+          test_status=$?
+          cargo clippy --all-targets --locked -- -D warnings
+          clippy_status=$?
+          cargo check --examples --locked
+          examples_status=$?
+          echo "Formatting: $format_status, tests: $test_status, Clippy: $clippy_status, examples: $examples_status"
+          if (( format_status || test_status || clippy_status || examples_status )); then
+            exit 1
+          fi
+
+      - name: Dependency licenses and advisory audit
+        shell: bash
+        run: |
+          cargo install cargo-deny --version 0.20.2 --locked --root "$PWD/target/audit-tools" --target-dir "$PWD/target/audit-tools-build"
+          python3 scripts/test-release-tools.py
+          python3 scripts/audit-dependencies.py
+
+  build:
+    name: Build macOS application
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build app bundle
+        run: bash scripts/bundle.sh
+      - name: Verify macOS app bundle
+        shell: bash
+        run: |
+          test -s dist/BudgetTinker.app/Contents/MacOS/budgettinker
+          test -s dist/BudgetTinker.app/Contents/Resources/BudgetTinker.icns
+          plutil -lint dist/BudgetTinker.app/Contents/Info.plist
+          codesign --verify --deep --strict --verbose=2 dist/BudgetTinker.app
+          file dist/BudgetTinker.app/Contents/MacOS/budgettinker
+      - name: Zip app bundle
+        run: ditto -c -k --sequesterRsrc --keepParent dist/BudgetTinker.app BudgetTinker-macOS.zip
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BudgetTinker-macOS
+          path: BudgetTinker-macOS.zip
+          if-no-files-found: error
+
+  linux:
+    name: Linux x86_64 release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libx11-dev libxcursor-dev libxrandr-dev libxi-dev \
+            libxkbcommon-dev libwayland-dev libgl1-mesa-dev libdbus-1-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build Linux executable
+        run: cargo build --release --locked
+      - name: Verify and package Linux executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s target/release/budgettinker
+          file target/release/budgettinker
+          ldd target/release/budgettinker
+          if ldd target/release/budgettinker | grep -q 'not found'; then
+            echo "::error::Linux binary has missing runtime libraries"
+            exit 1
+          fi
+          python3 scripts/stage-notices.py target/package/Notices
+          tar -czf BudgetTinker-linux-x86_64.tar.gz -C target/release budgettinker -C "$PWD/target/package" Notices
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BudgetTinker-linux-x86_64
+          path: BudgetTinker-linux-x86_64.tar.gz
+          if-no-files-found: error
+
+  windows:
+    name: Windows x86_64 release
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build Windows executable
+        run: cargo build --release --locked
+      - name: Verify and package Windows executable
+        shell: pwsh
+        run: |
+          $bin = "target/release/budgettinker.exe"
+          if (!(Test-Path $bin) -or (Get-Item $bin).Length -eq 0) {
+            throw "Missing or empty Windows release binary"
+          }
+          $header = [System.IO.File]::ReadAllBytes((Resolve-Path $bin).Path)
+          if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+            throw "Expected a Windows PE executable"
+          }
+          python scripts/stage-notices.py target/package/Notices
+          if ($LASTEXITCODE -ne 0) { throw "Notice staging failed" }
+          Compress-Archive -Path $bin, "target/package/Notices" -DestinationPath "BudgetTinker-windows-x86_64.zip" -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BudgetTinker-windows-x86_64
+          path: BudgetTinker-windows-x86_64.zip
+          if-no-files-found: error

@@ -1,0 +1,425 @@
+{
+  "fileMetaData": {
+    "budgetDataVersion": "4.2",
+    "currentKnowledge": "A-20"
+  },
+  "budgetMetaData": {
+    "currencyISOSymbol": "USD"
+  },
+  "accounts": [
+    {
+      "entityType": "account",
+      "entityId": "cash",
+      "entityVersion": "A-1",
+      "accountName": "Checking",
+      "accountType": "Checking",
+      "onBudget": true,
+      "hidden": false,
+      "note": "Account note"
+    },
+    {
+      "entityType": "account",
+      "entityId": "card",
+      "entityVersion": "A-1",
+      "accountName": "Visa",
+      "accountType": "CreditCard",
+      "onBudget": true,
+      "hidden": false
+    },
+    {
+      "entityType": "account",
+      "entityId": "asset",
+      "entityVersion": "A-1",
+      "accountName": "Closed Asset",
+      "accountType": "OtherAsset",
+      "onBudget": false,
+      "hidden": true
+    }
+  ],
+  "masterCategories": [
+    {
+      "entityType": "masterCategory",
+      "entityId": "debt",
+      "entityVersion": "A-1",
+      "name": "Pre-Y\u004eAB Debt",
+      "subCategories": [
+        {
+          "entityType": "category",
+          "entityId": "Category/PreY\u004eABDebt/card",
+          "entityVersion": "A-1",
+          "name": "Visa"
+        }
+      ]
+    },
+    {
+      "entityType": "masterCategory",
+      "entityId": "living",
+      "entityVersion": "A-1",
+      "name": "Living",
+      "note": "Group note",
+      "subCategories": [
+        {
+          "entityType": "category",
+          "entityId": "food",
+          "entityVersion": "A-1",
+          "name": "Food",
+          "note": "Food note"
+        },
+        {
+          "entityType": "category",
+          "entityId": "fees",
+          "entityVersion": "A-1",
+          "name": "Fees"
+        }
+      ]
+    },
+    {
+      "entityType": "masterCategory",
+      "entityId": "MasterCategory/__Hidden__",
+      "entityVersion": "A-1",
+      "name": "Hidden Categories",
+      "subCategories": [
+        {
+          "entityType": "category",
+          "entityId": "old",
+          "entityVersion": "A-1",
+          "name": "Living ` Old Hobby ` living"
+        }
+      ]
+    }
+  ],
+  "payees": [
+    {
+      "entityType": "payee",
+      "entityId": "opening",
+      "entityVersion": "A-1",
+      "name": "Starting Balance"
+    },
+    {
+      "entityType": "payee",
+      "entityId": "payroll",
+      "entityVersion": "A-1",
+      "name": "Payroll"
+    },
+    {
+      "entityType": "payee",
+      "entityId": "shop",
+      "entityVersion": "A-1",
+      "name": "Shop",
+      "autoFillCategoryId": "food",
+      "enabled": false
+    },
+    {
+      "entityType": "payee",
+      "entityId": "bank",
+      "entityVersion": "A-1",
+      "name": "Bank"
+    },
+    {
+      "entityType": "payee",
+      "entityId": "to-card",
+      "entityVersion": "A-1",
+      "name": "Transfer : Visa",
+      "targetAccountId": "card"
+    },
+    {
+      "entityType": "payee",
+      "entityId": "to-cash",
+      "entityVersion": "A-1",
+      "name": "Transfer : Checking",
+      "targetAccountId": "cash"
+    }
+  ],
+  "transactions": [
+    {
+      "entityType": "transaction",
+      "entityId": "open-cash",
+      "entityVersion": "A-1",
+      "accountId": "cash",
+      "amount": 1000,
+      "categoryId": "Category/__ImmediateIncome__",
+      "payeeId": "opening",
+      "date": "2026-01-01",
+      "memo": "Memo open-cash",
+      "cleared": "Reconciled"
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "open-card",
+      "entityVersion": "A-1",
+      "accountId": "card",
+      "amount": -200,
+      "categoryId": "Category/PreY\u004eABDebt/card",
+      "payeeId": "opening",
+      "date": "2026-01-01",
+      "memo": "Memo open-card",
+      "cleared": "Uncleared"
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "income",
+      "entityVersion": "A-1",
+      "accountId": "cash",
+      "amount": 300,
+      "categoryId": "Category/__DeferredIncome__",
+      "payeeId": "payroll",
+      "date": "2026-01-31",
+      "memo": "Memo income",
+      "cleared": "Uncleared"
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "split",
+      "entityVersion": "A-1",
+      "accountId": "card",
+      "amount": -30,
+      "categoryId": "Category/__Split__",
+      "payeeId": "shop",
+      "date": "2026-01-08",
+      "memo": "Combined entry",
+      "cleared": "Cleared",
+      "subTransactions": [
+        {
+          "entityType": "subTransaction",
+          "entityId": "s1",
+          "entityVersion": "A-1",
+          "categoryId": "food",
+          "amount": -25,
+          "memo": "Vegetables"
+        },
+        {
+          "entityType": "subTransaction",
+          "entityId": "s2",
+          "entityVersion": "A-1",
+          "categoryId": "fees",
+          "amount": -5,
+          "memo": ""
+        }
+      ],
+      "flag": "Green",
+      "matchedTransactions": [
+        {
+          "entityType": "transaction",
+          "entityId": "MT/split/MatchedTransaction/split",
+          "entityVersion": "A-1",
+          "accountId": "card",
+          "amount": -30,
+          "categoryId": null,
+          "payeeId": "bank",
+          "date": "2026-01-12",
+          "memo": "Bank description",
+          "cleared": "Cleared",
+          "subTransactions": [],
+          "flag": "Green",
+          "parentTransactionIdIfMatched": "split",
+          "accepted": false,
+          "source": "Imported",
+          "checkNumber": "B-42"
+        },
+        {
+          "entityType": "transaction",
+          "entityId": "MT/split/MatchedTransaction/manual/split",
+          "entityVersion": "A-1",
+          "accountId": "card",
+          "amount": -30,
+          "categoryId": "Category/__Split__",
+          "payeeId": "shop",
+          "date": "2026-01-08",
+          "memo": "Memo split",
+          "cleared": "Uncleared",
+          "subTransactions": [
+            {
+              "entityType": "subTransaction",
+              "entityId": "s1",
+              "entityVersion": "A-1",
+              "categoryId": "food",
+              "amount": -25,
+              "memo": "Vegetables"
+            },
+            {
+              "entityType": "subTransaction",
+              "entityId": "s2",
+              "entityVersion": "A-1",
+              "categoryId": "fees",
+              "amount": -5,
+              "memo": ""
+            }
+          ],
+          "flag": "Green",
+          "parentTransactionIdIfMatched": "split",
+          "accepted": true,
+          "checkNumber": "M-42"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "refund",
+      "entityVersion": "A-1",
+      "accountId": "card",
+      "amount": 10,
+      "categoryId": "food",
+      "payeeId": "shop",
+      "date": "2026-01-10",
+      "memo": "Memo refund",
+      "cleared": "Uncleared"
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "interest",
+      "entityVersion": "A-1",
+      "accountId": "card",
+      "amount": -5,
+      "categoryId": "fees",
+      "payeeId": "bank",
+      "date": "2026-01-10",
+      "memo": "Memo interest",
+      "cleared": "Uncleared",
+      "accepted": false
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "pay-out",
+      "entityVersion": "A-1",
+      "accountId": "cash",
+      "amount": -100,
+      "categoryId": null,
+      "payeeId": "to-card",
+      "date": "2026-01-20",
+      "memo": "Memo pay-out",
+      "cleared": "Uncleared",
+      "targetAccountId": "card",
+      "transferTransactionId": "pay-in"
+    },
+    {
+      "entityType": "transaction",
+      "entityId": "pay-in",
+      "entityVersion": "A-1",
+      "accountId": "card",
+      "amount": 100,
+      "categoryId": null,
+      "payeeId": "to-cash",
+      "date": "2026-01-20",
+      "memo": "Memo pay-in",
+      "cleared": "Uncleared",
+      "targetAccountId": "cash",
+      "transferTransactionId": "pay-out"
+    }
+  ],
+  "scheduledTransactions": [
+    {
+      "entityType": "scheduledTransaction",
+      "entityId": "rent",
+      "entityVersion": "A-1",
+      "accountId": "cash",
+      "amount": -20,
+      "categoryId": "food",
+      "payeeId": "shop",
+      "date": "2026-02-28",
+      "memo": "Memo rent",
+      "cleared": "Uncleared",
+      "frequency": "Monthly",
+      "twiceAMonthStartDay": 0
+    },
+    {
+      "entityType": "scheduledTransaction",
+      "entityId": "payment",
+      "entityVersion": "A-1",
+      "accountId": "cash",
+      "amount": -50,
+      "categoryId": null,
+      "payeeId": "to-card",
+      "date": "2026-02-28",
+      "memo": "Memo payment",
+      "cleared": "Uncleared",
+      "targetAccountId": "card",
+      "frequency": "Monthly",
+      "twiceAMonthStartDay": 0
+    }
+  ],
+  "monthlyBudgets": [
+    {
+      "entityType": "monthlyBudget",
+      "entityId": "MB/2026-01",
+      "entityVersion": "A-1",
+      "month": "2026-01-01",
+      "note": "Month note",
+      "monthlySubCategoryBudgets": [
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-01/Category/PreY\u004eABDebt/card",
+          "entityVersion": "A-1",
+          "categoryId": "Category/PreY\u004eABDebt/card",
+          "budgeted": 50,
+          "overspendingHandling": "Confined"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-01/food",
+          "entityVersion": "A-1",
+          "categoryId": "food",
+          "budgeted": 40,
+          "overspendingHandling": "AffectsBuffer"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-01/fees",
+          "entityVersion": "A-1",
+          "categoryId": "fees",
+          "budgeted": 10,
+          "overspendingHandling": "AffectsBuffer"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-01/old",
+          "entityVersion": "A-1",
+          "categoryId": "old",
+          "budgeted": 0,
+          "overspendingHandling": "AffectsBuffer"
+        }
+      ]
+    },
+    {
+      "entityType": "monthlyBudget",
+      "entityId": "MB/2026-02",
+      "entityVersion": "A-1",
+      "month": "2026-02-01",
+      "note": "Month note",
+      "monthlySubCategoryBudgets": [
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-02/Category/PreY\u004eABDebt/card",
+          "entityVersion": "A-1",
+          "categoryId": "Category/PreY\u004eABDebt/card",
+          "budgeted": 0,
+          "overspendingHandling": "Confined"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-02/food",
+          "entityVersion": "A-1",
+          "categoryId": "food",
+          "budgeted": 0,
+          "overspendingHandling": "AffectsBuffer"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-02/fees",
+          "entityVersion": "A-1",
+          "categoryId": "fees",
+          "budgeted": 0,
+          "overspendingHandling": "AffectsBuffer"
+        },
+        {
+          "entityType": "monthlyCategoryBudget",
+          "entityId": "2026-02/old",
+          "entityVersion": "A-1",
+          "categoryId": "old",
+          "budgeted": 0,
+          "overspendingHandling": "AffectsBuffer"
+        }
+      ]
+    }
+  ]
+}

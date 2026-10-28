@@ -1,0 +1,42 @@
+[package]
+name = "budgettinker"
+version = "0.1.0"
+edition = "2024"
+description = "Local-first desktop envelope budgeting"
+# Proposed future repository; not created by this migration.
+repository = "https://github.com/perevozchiko/budgettinker"
+license = "MIT OR Apache-2.0"
+publish = false
+# Public source allowlist; generated builds, data and tool caches are excluded.
+include = [
+    "/src/**", "/tests/**", "/examples/**", "/locales/**", "/assets/**", "/scripts/*.sh", "/scripts/*.swift", "/scripts/*.py",
+    "/docs/**", "/.github/**", "/.gitignore", "/AGENTS.md", "/ATTRIBUTION.md",
+    "/CONTRIBUTING.md", "/LICENSE-*", "/NOTICE", "/README.md", "/SECURITY.md",
+    "/deny.toml", "/Cargo.lock", "/build.rs",
+    "!**/.DS_Store", "!**/._*", "!**/__MACOSX/**", "!**/__pycache__/**",
+    "!**/*.sqlite", "!**/*.sqlite3", "!**/*.sqlite-*", "!**/*.sqlite3-*",
+    "!**/*.db", "!**/*.db-*", "!**/*.budgettinker", "!**/*.budgettinker-*",
+    "!**/*.preferences.json", "!**/.env", "!**/.env.*", "!**/credentials.json",
+    "!**/*.pem", "!**/*.key", "!**/*.p12", "!**/*.pfx",
+]
+
+[dependencies]
+eframe = { version = "=0.32.3", default-features = false, features = ["default_fonts", "glow"] }
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["arbitrary_precision"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+csv = "1.3"
+
+[profile.release]
+opt-level = 2
+strip = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+muda = { version = "=0.21.2", default-features = false }
+
+
+# Native Linux window backends are disabled by eframe's default-features = false.
+[target.'cfg(target_os = "linux")'.dependencies]
+eframe = { version = "=0.32.3", default-features = false, features = ["x11", "wayland"] }

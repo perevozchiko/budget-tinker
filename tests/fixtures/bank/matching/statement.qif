@@ -1,0 +1,175 @@
+!Type:Bank
+D04/15/2026
+T-10.01
+PBoundary Bank
+Mdate -11
+C*
+^
+D04/15/2026
+T-10.02
+PBoundary Bank
+Mdate -10
+C*
+^
+D04/15/2026
+T-10.03
+PBoundary Bank
+Mdate -1
+C*
+^
+D04/15/2026
+T-10.04
+PBoundary Bank
+Mdate +0
+C*
+^
+D04/15/2026
+T-10.05
+PBoundary Bank
+Mdate +1
+C*
+^
+D04/15/2026
+T-10.06
+PBoundary Bank
+Mdate +10
+C*
+^
+D04/15/2026
+T-10.07
+PBoundary Bank
+Mdate +11
+C*
+^
+D04/15/2026
+T-10.08
+PBoundary Bank
+MCleared
+C*
+^
+D04/15/2026
+T-10.09
+PBoundary Bank
+MReconciled
+C*
+^
+D04/15/2026
+T-10.10
+PBoundary Bank
+Mnearest date beats payee
+C*
+^
+D04/15/2026
+T-10.11
+PBoundary Bank
+Mpayee breaks date tie
+C*
+^
+D04/15/2026
+T-10.12
+PBoundary Bank
+Midentical candidates
+C*
+^
+D04/15/2026
+T-10.13
+PBoundary Bank
+Mcheck -61
+C*
+N123
+^
+D04/15/2026
+T-10.14
+PBoundary Bank
+Mcheck -60
+C*
+N123
+^
+D04/15/2026
+T-10.15
+PBoundary Bank
+Mcheck +60
+C*
+N123
+^
+D04/15/2026
+T-10.16
+PBoundary Bank
+Mcheck +61
+C*
+N123
+^
+D04/15/2026
+T-10.17
+PBoundary Bank
+Mdifferent check at 11 days
+C*
+N123
+^
+D04/15/2026
+T-10.18
+PBoundary Bank
+Mcheck beats nearest date
+C*
+N123
+^
+D04/15/2026
+T-99.98
+PBoundary Bank
+Mamount differs one cent
+C*
+^
+D04/15/2026
+T-10.20
+PBoundary Bank
+Msplit parent
+C*
+^
+D04/15/2026
+T-10.21
+PBoundary Bank
+Mimported FITID
+C*
+^
+D04/15/2026
+T-10.22
+PBoundary Bank
+Mimported no ID
+C*
+^
+D04/15/2026
+T10.23
+PBoundary Bank
+Mpositive inflow
+C*
+^
+D04/15/2026
+T-10.24
+PBoundary Bank
+Mopposite sign
+C*
+^
+D04/15/2026
+T-10.25
+PBoundary Bank
+Mdifferent account
+C*
+^
+D04/15/2026
+T-10.26
+PBoundary Bank
+Mordinary transfer
+C*
+^
+D04/15/2026
+T-10.27
+PBoundary Bank
+Msplit transfer counterpart
+C*
+^
+D04/15/2026
+T-10.28
+PBoundary Bank
+Malready matched
+C*
+^

@@ -1,0 +1,25 @@
+!Type:Bank
+D01/02/2026
+T-3.50
+PCARD COFFEE-123
+MLunch
+C*
+^
+D01/02/2026
+T-3.50
+PCARD COFFEE-123
+MLunch
+C*
+^
+D01/03/2026
+T1.00
+PRefund
+MReturned item
+C*
+^
+D01/04/2026
+T200.00
+PEmployer
+MSalary
+C*
+^

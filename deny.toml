@@ -1,0 +1,53 @@
+# Local release policy. No target filter: inspect every resolved platform supported
+# by the active Cargo feature graph. See docs/DEPENDENCY-AUDIT.md for the 327-crate inventory.
+[graph]
+all-features = true
+
+[advisories]
+# Local cache only; do not initialize any repository in the source tree.
+db-path = "target/release-audit/advisory-dbs"
+db-urls = ["https://github.com/RustSec/advisory-db"]
+yanked = "deny"
+# Owner-approved maintenance exception. Review expires at 2027-01-28 00:00 UTC.
+# Chain: eframe/egui 0.32.3 -> epaint 0.32.3 -> ab_glyph 0.2.32
+#        -> owned_ttf_parser 0.25.1 -> ttf-parser 0.25.1.
+# Verified inputs: epaint_default_fonts 0.32.3's embedded Hack/Ubuntu/Noto/emoji fonts;
+# src/ui/application.rs reads only fixed macOS paths under /System/Library/Fonts/Supplemental/:
+# Arial.ttf, Arial Unicode.ttf, Arial Bold.ttf, Arial Bold Italic.ttf.
+# No arbitrary user-font importer was found. This is not an exploitability guarantee.
+# Do not upgrade egui/eframe or extend this exception without a separate review.
+# cargo-deny 0.20.2 supports advisory ID/reason only. scripts/audit-dependencies.py
+# enforces the exact ttf/parent versions and UTC review deadline; it is the CI entry point.
+ignore = [
+    { id = "RUSTSEC-2026-0192", reason = "Owner-approved temporary maintenance risk for ttf-parser 0.25.1 via the pinned egui font stack; fixed installed/embedded fonts only; review by 2027-01-28. See docs/DEPENDENCY-AUDIT.md." },
+]
+unmaintained = "all"
+unsound = "all"
+
+[licenses]
+confidence-threshold = 0.95
+allow = ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "BSL-1.0", "Unicode-3.0"]
+unused-allowed-license = "warn"
+
+# Check the licensed workspace package as well as every dependency.
+[licenses.private]
+ignore = false
+
+[[licenses.exceptions]]
+name = "epaint_default_fonts"
+version = "=0.32.3"
+allow = ["OFL-1.1", "Ubuntu-font-1.0"]
+
+[[licenses.exceptions]]
+name = "hexf-parse"
+version = "=0.2.1"
+allow = ["CC0-1.0"]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
