@@ -498,22 +498,15 @@ impl App {
                                     Stroke::new(0.7_f32, crate::palette::CELL),
                                     egui::StrokeKind::Inside,
                                 );
-                                let prev = month_shift(month, -1);
-                                let quick = [
-                                    self.b.allocated(&prev, &c.id),
-                                    (-self.b.activity(&prev, &c.id)).max(0),
-                                    value - self.b.category_balance(month, &c.id),
-                                ];
+                                let editing_cell = BudgetCell { month: month.clone(), category: c.id.clone() };
+                                let options = BudgetCellOptions::for_budget(&self.b, &editing_cell, row_hovered, editor.is_editing(&editing_cell));
                                 editor.show(
                                     ui,
                                     cell,
-                                    BudgetCell {
-                                        month: month.clone(),
-                                        category: c.id.clone(),
-                                    },
+                                    editing_cell,
                                     value,
                                     &self.b.base,
-                                    BudgetCellOptions { quick, row_hovered },
+                                    options,
                                 );
                                 continue;
                             }

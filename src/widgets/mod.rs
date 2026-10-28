@@ -1,4 +1,5 @@
 //! Shared input, editing and register widgets.
+mod budget_calculator;
 pub(crate) mod budget_editor;
 pub(crate) mod category_picker;
 pub(crate) mod date_input;

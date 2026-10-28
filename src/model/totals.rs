@@ -1,6 +1,96 @@
 use super::*;
 
 impl Budget {
+    /// Up to twelve complete months, starting with the first recorded budget activity.
+    pub fn average_category_outflow(&self, month: &str, category: &str) -> (i64, usize) {
+        let first = self
+            .transactions
+            .iter()
+            .map(|t| &t.date[..7])
+            .chain(
+                self.allocations
+                    .keys()
+                    .filter_map(|key| key.split_once('/').map(|(m, _)| m)),
+            )
+            .filter(|m| *m < month)
+            .min();
+        let Some(first) = first else { return (0, 0) };
+        let months: Vec<_> = (1..=12)
+            .map(|n| month_shift(month, -n))
+            .take_while(|m| m.as_str() >= first)
+            .collect();
+        let total: i128 = months
+            .iter()
+            .map(|m| i128::from((-self.activity(m, category)).max(0)))
+            .sum();
+        let count = months.len();
+        (((total + count as i128 / 2) / count as i128) as i64, count)
+    }
+
+    /// Estimate upcoming category outflows using the most recent available exchange rate.
+    pub fn scheduled_category_outflows(&self, month: &str, category: &str) -> Result<i64> {
+        if !valid_month(month) {
+            return Err("Invalid month".into());
+        }
+        let end = Self::month_end(month);
+        let mut total = 0_i64;
+        for schedule in &self.scheduled {
+            let t = &schedule.transaction;
+            let account = self.account(&t.account)?;
+            if !account.on_budget || !self.has_category_flow(t) {
+                continue;
+            }
+            let amount: i64 = if t.splits.is_empty() {
+                if t.category.as_deref() == Some(category) {
+                    t.amount.min(0)
+                } else {
+                    0
+                }
+            } else {
+                t.splits
+                    .iter()
+                    .filter(|s| {
+                        s.category.as_deref() == Some(category)
+                            && self.split_has_category_flow(t, s)
+                    })
+                    .map(|s| s.amount.min(0))
+                    .try_fold(0_i64, |a, v| {
+                        a.checked_add(v).ok_or("Scheduled outflows are too large")
+                    })?
+            };
+            if amount == 0 {
+                continue;
+            }
+            let mut date = schedule.next_date.clone();
+            let anchor = schedule
+                .anchor_day
+                .unwrap_or_else(|| date[8..].parse().unwrap_or(1));
+            while date <= end {
+                if &date[..7] == month {
+                    let converted = if account.currency == self.base {
+                        amount
+                    } else {
+                        let snapshot = self
+                            .snapshots
+                            .iter()
+                            .filter(|s| s.currency == account.currency && s.month.as_str() <= month)
+                            .max_by_key(|s| &s.month)
+                            .ok_or("No exchange rate available for scheduled outflows")?;
+                        convert(amount, &account.currency, &self.base, snapshot.rate)?
+                    };
+                    total = total
+                        .checked_sub(converted)
+                        .ok_or("Scheduled outflows are too large")?;
+                }
+                match schedule.frequency().next(&date, anchor)? {
+                    Some(next) if next > date => date = next,
+                    Some(_) => return Err("Invalid schedule recurrence".into()),
+                    None => break,
+                }
+            }
+        }
+        Ok(total)
+    }
     pub fn activity(&self, month: &str, category: &str) -> i64 {
         self.transactions
             .iter()

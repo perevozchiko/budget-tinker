@@ -1,5 +1,25 @@
 # Validation — public preparation, 2026-10-28
 
+## Quick-budget menu focus fix — 2026-10-28
+
+- The egui event test presses and releases the budget-cell arrow, verifies the popup opens, selects its first item and checks that the resulting allocation is saved once.
+- `cargo fmt --all --check`, `cargo test --locked --quiet` (250 tests), strict all-target Clippy, example checks, six release-tool tests and all four dependency audits passed.
+- The macOS bundle was rebuilt; its signature and plist verified. The rebuilt executable launched with a freshly generated synthetic budget, confirmed by its open SQLite file. No live menu interaction or visual inspection is claimed.
+- The existing menu has three choices; historical averages, scheduled outflows and a calculator remain unimplemented.
+
+## Complete quick-budget menu — 2026-10-28
+
+- Added previous-month allocation and net outflow, average monthly net outflow across up to 12 available complete months, recurring scheduled outflows and the allocation needed for a zero category balance. Calculations use integer minor units; the historical start is the first recorded transaction or allocation. Scheduled foreign-currency values use the latest available rate and are unavailable when no rate exists.
+- Model/integration tests cover empty historical months, recurrence, split categories, off-budget accounts and currency-rate fallback. Calculator tests cover arithmetic, rounding and errors. Egui event tests select all five amounts and calculate and save 7 + 8.
+- `cargo fmt --all --check`, `cargo test --locked --quiet` (256 tests), strict all-target Clippy and example checks passed. All four dependency audits and six release-tool tests passed. The rebuilt bundle's plist and ad-hoc signature were verified.
+- On macOS, the rebuilt bundle opened `/tmp/budgettinker-quick.irlZNO/demo.budgettinker` (fresh synthetic data). The menu and calculator were visually inspected. Selecting zero balance changed the Groceries allocation from 40000 to 7114 minor units; calculator buttons then saved 7 + 8 as 1500, verified with a read-only SQLite query. No personal data was used.
+
+## Quick-budget appearance and action verification — 2026-10-28
+
+- The menu uses right-aligned rows and blue selection, and the calculator uses a bordered display and classic button grid. A rebuilt macOS bundle was visually inspected with the fresh synthetic budget `/tmp/budgettinker-look.aCLYzR/demo.budgettinker`; calculator buttons saved 7 + 8 as 1500 minor units, confirmed with a read-only SQLite query. The display border was added after that visual check.
+- Egui tests now obtain the actual menu values from a synthetic budget, click every monetary option, and verify the allocation; the zero-balance choice is additionally checked against the resulting category balance. Missing foreign exchange rates cannot change the budget. Historical tests cover refunds and off-budget transactions; other tests cover scheduled recurrence, splits, rates, calculator sign, backspace and cancellation.
+- Final checks: formatting, all 260 Rust tests, strict Clippy, example checks, six release-tool tests and all four dependency audits passed; rebuilt bundle signature and plist verified. The final bundle was visually inspected with a new synthetic budget at `/tmp/budgettinker-final.yg4hdg/demo.budgettinker`, including the calculator display border. After Cancel, selecting zero balance saved 7114 minor units, verified in SQLite read-only.
+
 All application checks ran in the new sibling directory, not the original worktree.
 
 - `cargo fmt --all --check`: passed after formatting renamed imports and strings.
@@ -220,3 +240,18 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   triggers it. No GitHub workflow was run; Windows and Linux builds remain unverified.
 - All 798 tracked paths were checked against source exclusions; none matched. Secret and
   inventory checks passed on source candidates. This does not establish legal clearance.
+
+
+## Calculator precision review fixes — 2026-10-28
+
+- Calculator operands and intermediate results now use reduced, checked i128 fractions. Only the final result is rounded to currency minor units (ties away from zero). Decimal operands are independent of currency precision; no dependency or persisted money representation changed. Expressions exceeding the bounded fraction representation report an error.
+- Arithmetic regressions cover `1 / 3 * 3`, `0.01 / 3 * 300`, sums of recurring fractions, negative divisors, `1000 * 1.1` in JPY, `100 * 1.075` in USD, fractional divisors, comma decimals, USD/JPY/KWD rounding, invalid input and i64 boundaries. Egui button tests verify OK writes 100 and 10750 minor units exactly once for the two USD regressions.
+- Model/integration and egui: all **263 Rust tests** passed (5 library, 108 binary/egui, 150 integration). Formatting, strict all-target Clippy and example checks passed. Six release-tool tests and all four dependency audits passed with the existing scoped advisory exception.
+- Live macOS: rebuilt bundle, verified ad-hoc signature and plist. PID 90957 / window 17437 opened fresh synthetic `/tmp/budgettinker-calculator-9olj27yp/demo.budgettinker`, confirmed by lsof. The calculator and resulting budget were visually inspected. Entering `0.01 / 3 * 300` and pressing OK saved 100 minor units; `100 * 1.075` then saved 10750. Both values were verified through read-only SQLite queries. The demo uses EUR (two decimal places); JPY and KWD were verified in automated tests. Screenshots and logs remain under target/. No personal data was opened.
+
+
+## Pre-commit validation after release-version pull — 2026-10-28
+
+- Fast-forwarded to `21c2f5b` (`0.1.0-alpha.1`) while preserving the quick-budget/calculator changes.
+- All **264 Rust tests** passed (5 library, 109 binary/egui, 150 integration). Formatting, strict all-target Clippy and example checks passed. Seven release-tool tests and all four dependency audits passed with the existing scoped advisory exception.
+- Live GUI/bundle evidence above predates this version-only pull; no additional live GUI acceptance is claimed here.

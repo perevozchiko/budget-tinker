@@ -42,6 +42,11 @@ is verified; Windows and Linux builds and runtime support remain unverified.
 
 ## Next behavioral work (separate from branding)
 
+- [x] Keep the budget cell editor open while its quick-budget menu is pressed.
+- [x] Extend the quick-budget menu with historical averages, scheduled outflows and a calculator.
+- [x] Match the quick-budget menu and calculator controls to the requested classic appearance.
+- [x] Preserve exact calculator intermediates, accept currency-independent decimal operands and round only the final monetary result.
+- [x] Verify each quick-budget choice against computed amounts and the resulting allocation.
 - Explicit Uncategorized state for imported bank inflows, with old-document compatibility.
 - Performance checks at 3,000–30,000 transactions and large payee/category lists.
 - Cross-platform native file dialogs and platform helper support.
