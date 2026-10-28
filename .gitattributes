@@ -1,0 +1,3 @@
+# Preserve exact upstream legal-notice bytes on every OS (including Windows).
+# Hashes in docs/third-party/inventory.json are calculated from these raw bytes.
+docs/third-party/** -text

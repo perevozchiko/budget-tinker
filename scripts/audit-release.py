@@ -12,7 +12,7 @@ import importlib.util
 ROOT = Path(__file__).resolve().parent.parent
 DIRECTORIES = {'src', 'tests', 'examples', 'locales', 'assets', 'scripts', 'docs', '.github'}
 ROOT_FILES = {
-    'Cargo.toml', 'Cargo.lock', 'build.rs', '.gitignore', 'deny.toml', 'AGENTS.md',
+    'Cargo.toml', 'Cargo.lock', 'build.rs', '.gitignore', '.gitattributes', 'deny.toml', 'AGENTS.md',
     'ATTRIBUTION.md', 'CONTRIBUTING.md', 'LICENSE-MIT', 'LICENSE-APACHE',
     'LICENSE-STATUS.md', 'NOTICE', 'README.md', 'SECURITY.md',
 }
@@ -63,8 +63,8 @@ def main():
     workflow = (ROOT / '.github/workflows/rust.yml').read_text()
     if not re.search(r'^on:\n  workflow_dispatch:\s*\n', workflow, re.M) or re.search(r'^  (?:push|pull_request|schedule):', workflow, re.M):
         errors.append('CI must have workflow_dispatch as its only trigger')
-    if not (ROOT / '.gitignore').is_file() or not (ROOT / '.github/workflows/rust.yml').is_file():
-        errors.append('Required .gitignore or workflow is missing from the actual source tree')
+    if any(not (ROOT / name).is_file() for name in ('.gitignore', '.gitattributes', '.github/workflows/rust.yml')):
+        errors.append('Required .gitignore, .gitattributes or workflow is missing from the actual source tree')
     candidates = []
     excluded_files = []
     # Walk only allowed roots; do not descend into tool caches or generated application bundles.
@@ -110,9 +110,9 @@ def main():
     package_files = set(package_result.stdout.splitlines())
     # Cargo generates these metadata files; they are not source archive candidates.
     extra_package_files = package_files - {r['path'] for r in candidates} - {'Cargo.toml.orig', '.cargo_vcs_info.json'}
-    required_hidden = {'.gitignore', '.github/workflows/rust.yml'}
+    required_hidden = {'.gitignore', '.gitattributes', '.github/workflows/rust.yml'}
     if not required_hidden.issubset(package_files):
-        errors.append('Cargo source list omitted .gitignore or .github/workflows/rust.yml')
+        errors.append('Cargo source list omitted required hidden configuration files')
     if package_result.returncode or extra_package_files:
         errors.append(f'Cargo source list failed or contains non-candidates: {sorted(extra_package_files)}')
     report = {

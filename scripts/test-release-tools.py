@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import json
+import subprocess
 import tempfile
 from types import SimpleNamespace
 from unittest import mock
@@ -54,12 +55,37 @@ class ReleasePolicyTests(unittest.TestCase):
             deps.verify_advisory_scope(metadata, datetime.date(2026, 10, 28))
 
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
-        for name in ['.github/workflows/rust.yml', '.gitignore']:
+        for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:
             self.assertFalse(source.excluded(Path(name)), name)
         for name in ['target/audit.log', 'dist/BudgetTinker.app/budgettinker',
                      '.env', 'docs/budget.sqlite3', 'docs/budget.budgettinker-wal',
                      'docs/__MACOSX/icon', 'assets/._app-icon.png', 'docs/.DS_Store']:
             self.assertTrue(source.excluded(Path(name)), name)
+
+
+    def test_notice_bytes_survive_windows_autocrlf_checkout(self):
+        # A Git checkout with core.autocrlf=true must not change hashed legal notices.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '.gitattributes').write_bytes((ROOT / '.gitattributes').read_bytes())
+            rel = Path('docs/third-party/ab_glyph-0.2.32/LICENSE')
+            notice = root / rel
+            notice.parent.mkdir(parents=True)
+            original = b'Original license line 1\\nOriginal license line 2\\n'
+            notice.write_bytes(original)
+            subprocess.run(['git', 'init', '-q'], cwd=root, check=True, capture_output=True)
+            subprocess.run(
+                ['git', '-c', 'core.autocrlf=true', 'add', '.gitattributes', rel.as_posix()],
+                cwd=root, check=True, capture_output=True,
+            )
+            staged = subprocess.check_output(['git', 'show', ':' + rel.as_posix()], cwd=root)
+            self.assertEqual(staged, original)
+            notice.unlink()
+            subprocess.run(
+                ['git', '-c', 'core.autocrlf=true', 'checkout-index', '-f', '--', rel.as_posix()],
+                cwd=root, check=True, capture_output=True,
+            )
+            self.assertEqual(notice.read_bytes(), original)
 
 
 class SourceArchiveTests(unittest.TestCase):
@@ -71,6 +97,7 @@ class SourceArchiveTests(unittest.TestCase):
                 'docs/.git/objects/object': 'nested git metadata',
                 '.github/workflows/rust.yml': 'on:\n  workflow_dispatch:\n',
                 '.gitignore': '/target/\n',
+                '.gitattributes': 'docs/third-party/** -text\n',
                 'Cargo.toml': '[package]\n',
                 'LICENSE-MIT': 'MIT License\n',
                 'LICENSE-APACHE': 'Apache License\n',

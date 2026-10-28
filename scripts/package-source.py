@@ -18,7 +18,7 @@ def main():
     if report['errors']:
         raise ValueError('Public source checks failed')
     records = {r['path']: r for r in report['candidates']}
-    required = {'.github/workflows/rust.yml', '.gitignore'}
+    required = {'.github/workflows/rust.yml', '.gitignore', '.gitattributes'}
     if not required.issubset(records):
         raise ValueError(f'Required hidden files missing: {required - records.keys()}')
     destination = ROOT / 'dist/BudgetTinker-source.zip'
@@ -48,7 +48,7 @@ def main():
         temporary.replace(destination)
     finally:
         temporary.unlink(missing_ok=True)
-    print(f'Created {destination.relative_to(ROOT)} with {len(records)} verified files, including .github and .gitignore. Local archive with active MIT/Apache-2.0 licenses; not published.')
+    print(f'Created {destination.relative_to(ROOT)} with {len(records)} verified files, including .github, .gitignore and .gitattributes. Local archive with active MIT/Apache-2.0 licenses; not published.')
 
 
 if __name__ == '__main__':

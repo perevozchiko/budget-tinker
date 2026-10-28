@@ -9,7 +9,7 @@ publish = false
 # Public source allowlist; generated builds, data and tool caches are excluded.
 include = [
     "/src/**", "/tests/**", "/examples/**", "/locales/**", "/assets/**", "/scripts/*.sh", "/scripts/*.swift", "/scripts/*.py",
-    "/docs/**", "/.github/**", "/.gitignore", "/AGENTS.md", "/ATTRIBUTION.md",
+    "/docs/**", "/.github/**", "/.gitignore", "/.gitattributes", "/AGENTS.md", "/ATTRIBUTION.md",
     "/CONTRIBUTING.md", "/LICENSE-*", "/NOTICE", "/README.md", "/SECURITY.md",
     "/deny.toml", "/Cargo.lock", "/build.rs",
     "!**/.DS_Store", "!**/._*", "!**/__MACOSX/**", "!**/__pycache__/**",
