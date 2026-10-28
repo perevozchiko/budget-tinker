@@ -93,7 +93,14 @@ def main():
             with log.open('w') as output:
                 status = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT).returncode
             results['checks'][f'{name}-{check}'] = {'exit_code': status, 'log': str(log.relative_to(ROOT))}
-            print(f'{name} {check}: exit {status}; {log.relative_to(ROOT)}')
+            print(f'{name} {check}: exit {status}; {log.relative_to(ROOT)}', flush=True)
+            if status:
+                # Keep the full audit log on disk, but surface failures in Actions logs.
+                # Preserve the failing exit code; never suppress or reclassify advisories.
+                print(f'--- cargo-deny {name} {check} failure details ---', file=sys.stderr, flush=True)
+                print(log.read_text(encoding='utf-8', errors='replace')[-16000:],
+                      file=sys.stderr, flush=True)
+                print('--- end cargo-deny failure details ---', file=sys.stderr, flush=True)
     # Record exact advisory cache revision through read-only git commands. This is only
     # cargo-deny's upstream data cache, never a repository for the BudgetTinker project.
     results['advisory_databases'] = []

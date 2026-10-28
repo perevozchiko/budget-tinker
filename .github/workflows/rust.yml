@@ -53,6 +53,15 @@ jobs:
           cargo install cargo-deny --version 0.20.2 --locked --root "$PWD/target/audit-tools" --target-dir "$PWD/target/audit-tools-build"
           python3 scripts/test-release-tools.py
           python3 scripts/audit-dependencies.py
+      - name: Upload dependency audit diagnostics on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: BudgetTinker-dependency-audit-diagnostics
+          path: |
+            target/release-audit/deny-*.log
+            target/release-audit/dependency-results.json
+          if-no-files-found: warn
 
   build:
     if: ${{ inputs.platform == 'all' || inputs.platform == 'macos' }}
