@@ -71,7 +71,7 @@ class ReleasePolicyTests(unittest.TestCase):
             rel = Path('docs/third-party/ab_glyph-0.2.32/LICENSE')
             notice = root / rel
             notice.parent.mkdir(parents=True)
-            original = b'Original license line 1\\nOriginal license line 2\\n'
+            original = b'Original license line 1\nOriginal license line 2\n'
             notice.write_bytes(original)
             subprocess.run(['git', 'init', '-q'], cwd=root, check=True, capture_output=True)
             subprocess.run(
