@@ -19,4 +19,5 @@ trademark, guaranteed uniqueness or endorsement is claimed. This records the pro
 license choice, not an independent legal clearance or chain-of-title certification.
 
 Licensing does not authorize this agent to initialize Git, publish, upload or create a
-repository. No such action was performed as part of finalization.
+repository. No such action was performed as part of the historical license finalization; the project
+now has a private repository and an initial source commit on `master`.

@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Regression checks for advisory scope/deadline and private source exclusions."""
 import datetime
+import hashlib
+import json
+import tempfile
+from types import SimpleNamespace
+from unittest import mock
+import zipfile
 import importlib.util
 from pathlib import Path
 import sys
@@ -19,6 +25,7 @@ def load(name):
 
 deps = load('audit-dependencies')
 source = load('audit-release')
+package = load('package-source')
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -53,6 +60,60 @@ class ReleasePolicyTests(unittest.TestCase):
                      '.env', 'docs/budget.sqlite3', 'docs/budget.budgettinker-wal',
                      'docs/__MACOSX/icon', 'assets/._app-icon.png', 'docs/.DS_Store']:
             self.assertTrue(source.excluded(Path(name)), name)
+
+
+class SourceArchiveTests(unittest.TestCase):
+    def test_git_checkout_audit_and_reproducible_archive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            files = {
+                '.git/config': 'private git metadata',
+                'docs/.git/objects/object': 'nested git metadata',
+                '.github/workflows/rust.yml': 'on:\n  workflow_dispatch:\n',
+                '.gitignore': '/target/\n',
+                'Cargo.toml': '[package]\n',
+                'LICENSE-MIT': 'MIT License\n',
+                'LICENSE-APACHE': 'Apache License\n',
+                'scripts/stage-notices.py': 'def verify_inventory(): return 0\n',
+                'docs/third-party/inventory.json': '[]',
+                'docs/example.sqlite3': 'private data',
+                'docs/__pycache__/cache': 'cache',
+                'docs/.DS_Store': 'metadata',
+                'target/generated': 'build',
+                'dist/generated': 'build',
+            }
+            for name, content in files.items():
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+            metadata = {'packages': [{'manifest_path': str(root / 'Cargo.toml'),
+                                      'license': 'MIT OR Apache-2.0', 'publish': []}]}
+            cargo_files = [name for name in files if name not in {
+                '.git/config', 'docs/.git/objects/object', 'docs/example.sqlite3',
+                'docs/__pycache__/cache', 'docs/.DS_Store', 'target/generated', 'dist/generated'}]
+            result = SimpleNamespace(stdout='\n'.join(cargo_files + ['.cargo_vcs_info.json', 'Cargo.toml.orig']), returncode=0)
+            with mock.patch.object(source, 'ROOT', root), \
+                 mock.patch.object(source.subprocess, 'check_output', return_value=json.dumps(metadata)), \
+                 mock.patch.object(source.subprocess, 'run', return_value=result):
+                self.assertFalse(source.main())
+            report = json.loads((root / 'target/release-audit/source-candidates.json').read_text())
+            names = {record['path'] for record in report['candidates']}
+            self.assertEqual(names, set(cargo_files))
+            with mock.patch.object(package, 'ROOT', root), \
+                 mock.patch.object(package.subprocess, 'run'):
+                package.main()
+                archive_path = root / 'dist/BudgetTinker-source.zip'
+                first = archive_path.read_bytes()
+                with zipfile.ZipFile(archive_path) as archive:
+                    self.assertEqual(set(archive.namelist()), {'budgettinker/' + name for name in names})
+                    for record in report['candidates']:
+                        self.assertEqual(hashlib.sha256(archive.read('budgettinker/' + record['path'])).hexdigest(), record['sha256'])
+                package.main()
+                self.assertEqual(first, archive_path.read_bytes())
+                (root / '.gitignore').write_text('changed since audit')
+                with self.assertRaisesRegex(ValueError, 'Source changed since audit'):
+                    package.main()
+                self.assertEqual(first, archive_path.read_bytes())
 
 
 if __name__ == '__main__':

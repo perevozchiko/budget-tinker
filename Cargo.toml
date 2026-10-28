@@ -3,8 +3,7 @@ name = "budgettinker"
 version = "0.1.0"
 edition = "2024"
 description = "Local-first desktop envelope budgeting"
-# Proposed future repository; not created by this migration.
-repository = "https://github.com/perevozchiko/budgettinker"
+repository = "https://github.com/perevozchiko/budget-tinker"
 license = "MIT OR Apache-2.0"
 publish = false
 # Public source allowlist; generated builds, data and tool caches are excluded.

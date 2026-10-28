@@ -1,6 +1,12 @@
 # Development plan
 
-## Public preparation — 2026-10-28
+## Current repository status
+
+The private repository `perevozchiko/budget-tinker` has an initial source commit on
+`master`. It is not publicly released and has no published GitHub Releases. macOS ARM64
+is verified; Windows and Linux builds and runtime support remain unverified.
+
+## Public preparation — 2026-10-28 (historical)
 
 - [x] Create an unversioned sibling copy without old history, builds or private reference material.
 - [x] Rename product, binary, bundle, support paths, environment variable and icon.
@@ -18,7 +24,7 @@
 - [x] Include hidden CI/ignore files in verified source ZIPs; exclude builds, data and macOS metadata.
 - [x] Translate uncovered product validation/error boundaries while preserving stored/user text.
 - [ ] Review the temporary font-stack exception by 2027-01-28; no egui/eframe upgrade authorized yet.
-- [ ] Review the release audit and verify Windows/Linux builds using manual CI after repository creation.
+- [ ] Review the release audit and verify Windows/Linux builds using manual CI.
 
 - [x] Remove contiguous legacy brand names from source text while retaining legacy format compatibility.
 
@@ -42,3 +48,9 @@
 
 Public preparation preserves the existing interface, calculations and serialized budget schema.
 See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
+
+## Post-migration repository maintenance
+
+- [x] Permit Git checkouts in source audits while excluding Git metadata from review ZIPs.
+- [x] Add manual CI platform selection and update private repository status documentation.
+- [ ] Run and test Windows/Linux platform builds before claiming platform support.

@@ -6,13 +6,13 @@ backups; budgets and backups are not encrypted by the application.
 
 ## Report privately
 
-Private reporting is **not configured**: this preparation did not create or publish a
-GitHub repository. Once the maintainer enables it, use **Security → Advisories → Report a
-vulnerability** on the actual BudgetTinker repository. Do not assume a future URL is live.
+The [BudgetTinker repository](https://github.com/perevozchiko/budget-tinker) is private.
+Private vulnerability reporting has not been verified as configured. If the maintainer
+enables it, use **Security → Advisories → Report a vulnerability** there.
 
 Until a private channel is enabled, contact the maintainer through an already established
 private channel. If none is available, open only a minimal request for a private contact
-once a repository exists; do not include exploit instructions, secrets, real budgets or
+if appropriate; do not include exploit instructions, secrets, real budgets or
 malicious attachments in a public issue.
 
 Include affected version/commit, OS/architecture, affected importer/operation, impact,
@@ -22,7 +22,7 @@ Imported files are untrusted inputs; minimize and document any accepted regressi
 
 ## Maintainer setup before release
 
-After creating the intended public repository, an owner/admin must open **Settings →
+Before public release, an owner/admin should verify private reporting is enabled under **Settings →
 Security and quality → Advanced Security → Private vulnerability reporting → Enable**.
 Verify the **Report a vulnerability** button appears under Security/Advisories, enable
 notifications and confirm who will triage reports. A SECURITY.md file does not enable

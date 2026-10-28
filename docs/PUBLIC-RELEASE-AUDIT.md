@@ -3,11 +3,11 @@
 **Licensing complete:** project-owned material is MIT OR Apache-2.0, with separate third-party
 terms retained. The maintainer instructed activation without a separate rights-confirmation
 step. macOS technical checks passed; Windows/Linux build/runtime verification is outstanding.
-Publication, repository creation and upload remain outside this local task.
-
-No project Git initialization, commit, push, upload, publication or remote repository
-creation occurred. Work stayed in BudgetTinker; the original private project was untouched.
-The project remains unversioned. Tool caches and verification budgets live only under target/.
+The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
+with primary branch `master` and an initial source commit. The project is not publicly
+released and no GitHub Releases have been published. Tool caches and verification budgets
+live only under target/. Earlier migration work was performed before repository creation;
+the historical verification below describes that phase.
 
 ## Completed release tasks
 
@@ -81,8 +81,8 @@ scope, corrected intermediate failures and the actual final checks.
   branches/workflows and target dependency graphs are inspected, not passed native builds.
 - Review the temporary font-stack exception by 2027-01-28. No eframe/egui upgrade to 0.34
   is authorized in this task. A changed scope or elapsed deadline fails the audit wrapper.
-- When a public repository is separately authorized, enable private vulnerability reporting
+- Before public release, enable or verify private vulnerability reporting
   and verify its button/notifications as documented in SECURITY.md. No remote setting is changed.
 
 Creating the local ZIP does not authorize this agent to publish. Keep generated app bundles, archives,
-SQLite files, tool caches and captured desktop material outside any future source commit.
+SQLite files, tool caches and captured desktop material outside source commits.

@@ -196,3 +196,27 @@ No project repository, commit, publication or upload was created.
 ## English source migration — partial, 2026-10-28
 
 Exchange-rate errors now originate in English. Formatting, all 249 Rust tests, strict Clippy, example checks, four release-tool tests and dependency audits passed. The remaining source translation catalogue and Russian literals have not yet been migrated. No live GUI check was performed.
+
+## Post-migration repository cleanup — 2026-10-28
+
+The private Git checkout is on `master`; the initial source commit predates this task.
+No application, financial, schema or dependency code was changed. The original project
+was not touched. No commits, pushes, releases or visibility changes were made.
+
+- `cargo fmt --all --check`, strict all-target Clippy and `cargo check --examples --locked`
+  passed. `cargo test --locked --quiet` passed **249 tests**: 5 library, 98 binary/egui
+  and 146 integration. No separate live GUI check was performed for this tooling change.
+- `scripts/test-release-tools.py` passed **5 tests**, including a temporary Git fixture,
+  archive exclusions, hidden files, reproducibility and rejection of changed source hashes.
+- `scripts/audit-dependencies.py` passed active and full-inventory license/advisory checks
+  with the existing scoped exception. The active license check retains the known unused
+  CC0 exception warning; advisory notes retain the approved maintenance exception.
+- Source audit passed in the Git checkout; Cargo's generated `.cargo_vcs_info.json` is
+  recognized in its package list but is not a source ZIP candidate. The ZIP builder
+  verifies each archived hash and includes the hidden workflow and ignore file.
+- macOS ARM64 bundle rebuilt; executable, icon, bundled notices, plist and ad-hoc
+  signature verified. No notarization or new live GUI check is claimed.
+- Workflow YAML and each job condition were checked locally; only `workflow_dispatch`
+  triggers it. No GitHub workflow was run; Windows and Linux builds remain unverified.
+- All 798 tracked paths were checked against source exclusions; none matched. Secret and
+  inventory checks passed on source candidates. This does not establish legal clearance.

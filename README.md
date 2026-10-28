@@ -26,7 +26,7 @@ classic light interface is preserved; a dark theme is not currently provided.
 
 ## Platforms and setup
 
-macOS is the primary locally verified platform. Manual build jobs also exist for Windows
+macOS ARM64 is the locally verified platform. Manual build jobs also exist for Windows
 and Linux; those platforms have not been built or tested during this migration. Some desktop
 operations still invoke macOS tools (`osascript`, `open`, the Swift PDF helper); successful
 compilation on another OS does not establish full desktop feature support.
@@ -57,8 +57,10 @@ plutil -lint dist/BudgetTinker.app/Contents/Info.plist
 ```
 
 This creates a locally ad-hoc signed app; it is not Apple-notarized. CI is started only
-through **Actions → Run workflow** and includes checks plus macOS, Linux and Windows jobs.
-No remote repository or release is created by this preparation.
+through **Actions → Run workflow**. Select all platforms or macOS, Linux or Windows;
+validation always runs. The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
+with `master` as its primary branch and an initial source commit. The project is not yet
+publicly released, and no GitHub Releases have been published.
 
 To prepare a **local source review ZIP**, including the hidden workflow and ignore files:
 
@@ -69,7 +71,7 @@ python3 scripts/package-source.py
 The script writes `dist/BudgetTinker-source.zip`, verifies every entry and includes
 `.github/workflows/rust.yml` and `.gitignore` explicitly. It excludes builds, caches,
 budgets and macOS metadata. The archive includes the project license texts and all third-party notices.
-Creating the ZIP does not publish it or create a repository.
+Creating the ZIP does not publish it.
 
 ## Local data and backups
 

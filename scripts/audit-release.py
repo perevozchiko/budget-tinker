@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify public source candidates without initializing Git or creating an archive."""
+"""Verify public source candidates without creating an archive."""
 import hashlib
 import json
 from pathlib import Path
@@ -41,8 +41,6 @@ def excluded(path):
 
 def main():
     errors = []
-    if (ROOT / '.git').exists():
-        errors.append('Unexpected project .git: this preparation must remain unversioned')
     spec = importlib.util.spec_from_file_location('stage_notices', ROOT / 'scripts/stage-notices.py')
     stage = importlib.util.module_from_spec(spec)
     sys.dont_write_bytecode = True
@@ -110,7 +108,8 @@ def main():
         text=True, capture_output=True,
     )
     package_files = set(package_result.stdout.splitlines())
-    extra_package_files = package_files - {r['path'] for r in candidates} - {'Cargo.toml.orig'}
+    # Cargo generates these metadata files; they are not source archive candidates.
+    extra_package_files = package_files - {r['path'] for r in candidates} - {'Cargo.toml.orig', '.cargo_vcs_info.json'}
     required_hidden = {'.gitignore', '.github/workflows/rust.yml'}
     if not required_hidden.issubset(package_files):
         errors.append('Cargo source list omitted .gitignore or .github/workflows/rust.yml')

@@ -2,7 +2,7 @@
 
 ## Evidence available in this copy
 
-This unversioned sibling was copied from the local Rust project at source commit 2e4fbb9
+During migration, this then-unversioned sibling was copied from the local Rust project at source commit 2e4fbb9
 in the earlier migration. Git history was intentionally excluded. This follow-up operates
 only in BudgetTinker and does not inspect or modify the original project.
 

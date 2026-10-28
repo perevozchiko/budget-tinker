@@ -4,6 +4,17 @@ name: Rust checks and desktop builds
 # Commits and pull requests must not trigger release builds.
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - macos
+          - linux
+          - windows
 
 permissions:
   contents: read
@@ -44,6 +55,7 @@ jobs:
           python3 scripts/audit-dependencies.py
 
   build:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'macos' }}
     name: Build macOS application
     runs-on: macos-15
     timeout-minutes: 60
@@ -71,6 +83,7 @@ jobs:
           if-no-files-found: error
 
   linux:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'linux' }}
     name: Linux x86_64 release
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -106,6 +119,7 @@ jobs:
           if-no-files-found: error
 
   windows:
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'windows' }}
     name: Windows x86_64 release
     runs-on: windows-2022
     timeout-minutes: 60
