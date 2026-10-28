@@ -99,9 +99,14 @@ impl App {
                     Overlay::Help(topic) => {
                         let (heading, content) = match topic.as_str() {
                             "privacy" => ("Конфиденциальность", "Бюджет и резервные копии хранятся локально. Приложение не отправляет операции, названия счетов или категории на сервер."),
-                            "release_notes" => ("Изменения версии 0.1.0", "Системное меню macOS; свойства и создание бюджета; сохранение и загрузка версий; экспорт операций и бюджета; настройки получателей; классическое оформление."),
+                            "release_notes" => ("Изменения версии", "Системное меню macOS; свойства и создание бюджета; сохранение и загрузка версий; экспорт операций и бюджета; настройки получателей; классическое оформление."),
                             "credit_basics" | "credit_payments" => ("Credit Cards in BudgetTinker", "Add the card as a budget account with a negative starting balance. Starting Debt holds that old debt and carries its negative balance forward. Budget money to that category to reduce the old debt.\n\nBudget new purchases and interest in their spending categories. Record a payment as a transfer from Checking to the card; it does not create another expense or reduce the old-debt category a second time. A categorized refund restores money to its original category, even after a payment.\n\nThe card balance includes new purchases and payments, so it can differ from the Starting Debt category balance. Existing accounts are preserved; their starting balances are not recategorized automatically."),
                             _ => ("Первые шаги", "1. Добавьте счета и начальные остатки.\n\n2. Распределите деньги по категориям в колонке Budgeted. Нажмите на сумму, введите назначение; Enter или Tab перейдёт к следующей категории.\n\n3. В реестре добавляйте доходы, расходы и переводы. Доходы без категории увеличивают доступную сумму бюджета.\n\n4. Сверяйте подтверждённые операции с выпиской.\n\n5. Используйте отчёты и сохраняйте резервные копии через меню File."),
+                        };
+                        let heading = if topic == "release_notes" {
+                            format!("{heading} {}", env!("CARGO_PKG_VERSION"))
+                        } else {
+                            heading.to_owned()
                         };
                         ui.l_label(RichText::new(heading).font(crate::palette::bold(18.)).color(GREEN));
                         ui.add_space(10.); ui.l_label(content);

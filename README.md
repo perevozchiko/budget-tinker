@@ -26,8 +26,9 @@ classic light interface is preserved; a dark theme is not currently provided.
 
 ## Platforms and setup
 
-macOS ARM64 is the locally verified platform. Manual build jobs also exist for Windows
-and Linux; those platforms have not been built or tested during this migration. Some desktop
+macOS ARM64 is the locally verified platform. Windows x86-64 and Linux x86-64 release
+builds and packaging have passed manual GitHub Actions; full GUI/runtime testing on those
+platforms has not been completed. Some desktop
 operations still invoke macOS tools (`osascript`, `open`, the Swift PDF helper); successful
 compilation on another OS does not establish full desktop feature support.
 [Platform support](docs/PLATFORMS.md) lists the exact supported and unsupported operations.
