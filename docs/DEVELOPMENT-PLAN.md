@@ -71,3 +71,12 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 - [ ] Inspect the final account drag offset live and verify animation and persistence with dedicated egui interaction coverage.
 
 - [x] Restrict account drop targets to the visible scroll clip and remove legacy brand references from project documentation.
+
+## Reports filter panels — 2026-10-29
+
+- [x] Use anchored Timeframe, Categories, Payees and Accounts panels across all five reports, with classic headers, blue selection links, checkbox lists and Cancel/Done footers.
+- [x] Apply quick timeframe presets immediately; confirm custom month/year ranges with Done and reject inverted or excessively long ranges.
+- [x] Group visible categories, hidden categories and budget/off-budget/closed accounts; keep irrelevant Net Worth filters disabled.
+- [x] Remember each report's filters independently in budget-local preferences, retaining compatibility with existing saved choices.
+- [x] Verify report interactions, persistence and unchanged budget data in egui and the rebuilt macOS application.
+- [x] Highlight enabled report filter links immediately on hover as well as while their panel is open.

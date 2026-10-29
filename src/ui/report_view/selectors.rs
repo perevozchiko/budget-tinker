@@ -1,27 +1,5 @@
 use super::*;
 
-pub(super) fn filter_combo(
-    ui: &mut egui::Ui,
-    id: &str,
-    label: &str,
-    content: impl FnOnce(&mut egui::Ui),
-) {
-    ui.scope(|ui| {
-        let widgets = &mut ui.visuals_mut().widgets;
-        widgets.inactive.bg_stroke = Stroke::NONE;
-        widgets.inactive.weak_bg_fill = Color32::TRANSPARENT;
-        widgets.inactive.bg_fill = Color32::TRANSPARENT;
-        egui::ComboBox::from_id_salt(id)
-            .selected_text(
-                RichText::new(label)
-                    .color(Color32::from_rgb(0, 151, 205))
-                    .strong(),
-            )
-            .width(190.)
-            .show_ui(ui, content);
-    });
-}
-
 /// Changes remain a draft until Done; Cancel, Escape and outside clicks discard it.
 pub(super) fn multi_select_combo(
     ui: &mut egui::Ui,
@@ -31,71 +9,65 @@ pub(super) fn multi_select_combo(
     show_budget_preset: bool,
     content: impl FnOnce(&mut egui::Ui, &mut Selection),
 ) {
-    ui.scope(|ui| {
-        let draft_id = ui.make_persistent_id((id, "draft"));
-        let combo_id = ui.make_persistent_id(egui::Id::new(id));
-        let mut draft = if egui::ComboBox::is_open(ui.ctx(), combo_id) {
-            ui.data_mut(|data| data.get_temp::<Selection>(draft_id))
-                .unwrap_or_else(|| selection.clone())
-        } else {
-            selection.clone()
-        };
-        let widgets = &mut ui.visuals_mut().widgets;
-        widgets.inactive.bg_stroke = Stroke::NONE;
-        widgets.inactive.weak_bg_fill = Color32::TRANSPARENT;
-        widgets.inactive.bg_fill = Color32::TRANSPARENT;
-        egui::ComboBox::from_id_salt(id)
-            .selected_text(
-                RichText::new(label)
-                    .color(Color32::from_rgb(0, 151, 205))
-                    .strong(),
-            )
-            .width(190.)
-            .height(420.)
-            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
-            .show_ui(ui, |ui| {
-                if show_budget_preset {
-                    ui.selectable_value(&mut draft, Selection::BudgetAccounts, "Budget Accounts");
-                    ui.separator();
-                }
+    let draft_id = ui.make_persistent_id((id, "draft"));
+    let trigger_id = ui.make_persistent_id(id);
+    let popup_id = trigger_id.with("report_popup");
+    let open = egui::Popup::is_id_open(ui.ctx(), popup_id);
+    let mut draft = if open {
+        ui.data_mut(|data| data.get_temp::<Selection>(draft_id))
+            .unwrap_or_else(|| selection.clone())
+    } else {
+        selection.clone()
+    };
+    let trigger = popover::trigger(ui, id, label, open);
+    let title = if show_budget_preset {
+        "Accounts"
+    } else if id.contains("payee") {
+        "Payees"
+    } else {
+        "Categories"
+    };
+    let popup = egui::Popup::menu(&trigger)
+        .id(popup_id)
+        .align(egui::RectAlign::BOTTOM)
+        .width(298.)
+        .gap(16.)
+        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+        .frame(popover::frame())
+        .show(|ui| {
+            popover::header(ui, 298., title);
+            popover::band(ui, 298., Color32::WHITE, 3, |ui| {
                 ui.horizontal(|ui| {
-                    if ui
-                        .add_enabled(!draft.is_all(), classic::Button::new("Select All").small())
-                        .clicked()
-                    {
+                    ui.spacing_mut().item_spacing.x = 5.;
+                    if popover::link(ui, "Select All", draft.is_all()).clicked() {
                         draft = Selection::All;
                     }
-                    if ui
-                        .add_enabled(
-                            !draft.is_empty(),
-                            classic::Button::new("Select None").small(),
-                        )
-                        .clicked()
-                    {
+                    if popover::link(ui, "Select None", draft.is_empty()).clicked() {
                         draft = Selection::NoneSelected;
                     }
                 });
-                ui.separator();
-                content(ui, &mut draft);
-                ui.separator();
-                ui.horizontal(|ui| {
-                    if ui.button("Done").clicked() {
-                        *selection = draft.clone();
-                        ui.close();
-                    }
-                    if ui.button("Cancel").clicked() {
-                        ui.close();
-                    }
-                });
             });
-        let open = egui::ComboBox::is_open(ui.ctx(), combo_id);
-        ui.data_mut(|data| {
-            if open {
-                data.insert_temp(draft_id, draft);
-            } else {
-                data.remove::<Selection>(draft_id);
+            popover::divider(ui, 298.);
+            popover::band(ui, 298., Color32::from_gray(245), 7, |ui| {
+                ui.set_min_height(208.);
+                ui.spacing_mut().item_spacing.y = 1.;
+                ui.spacing_mut().interact_size.y = 19.;
+                content(ui, &mut draft);
+            });
+            if popover::footer(ui, 298., !draft.is_empty()) {
+                *selection = draft.clone();
             }
         });
+    if let Some(popup) = popup {
+        popover::pointer(ui, &trigger, popup.response.rect);
+    }
+    let still_open = egui::Popup::is_id_open(ui.ctx(), popup_id);
+    ui.data_mut(|data| {
+        if still_open {
+            data.insert_temp(draft_id, draft);
+        } else {
+            data.remove::<Selection>(draft_id);
+        }
     });
 }
 
@@ -107,65 +79,59 @@ pub(super) fn category_selection_items(
     let mut items: Vec<_> = budget
         .categories
         .iter()
-        .map(|category| (category.id.as_str(), category.name.clone(), true))
+        .map(|category| {
+            (
+                category.id.as_str(),
+                i18n::tr(ui.ctx(), &category.name),
+                true,
+            )
+        })
         .collect();
     items.push((
         budgettinker::model::UNCATEGORIZED_CATEGORY,
         "Uncategorized Transactions".into(),
         true,
     ));
-    let mut groups: Vec<_> = budget
-        .categories
-        .iter()
-        .map(|category| category.group.as_str())
-        .collect();
-    groups.sort_unstable();
-    groups.dedup();
+    let hidden = |category: &budgettinker::model::Category| {
+        category.hidden
+            || budget
+                .category_groups
+                .iter()
+                .any(|g| g.name == category.group && g.hidden)
+    };
     egui::ScrollArea::vertical()
-        .max_height(280.)
+        .max_height(208.)
         .show(ui, |ui| {
-            for group in groups {
+            for group in budget.group_names() {
                 let members: Vec<_> = budget
                     .categories
                     .iter()
-                    .filter(|category| category.group == group)
-                    .map(|category| category.id.as_str())
+                    .filter(|c| c.group == group && !hidden(c))
+                    .map(|c| c.id.as_str())
                     .collect();
-                let checked_count = members
-                    .iter()
-                    .filter(|id| selection_item_checked(selection, id, true))
-                    .count();
-                let mut checked = checked_count == members.len();
-                let partial = checked_count > 0 && !checked;
-                if ui
-                    .add(
-                        egui::Checkbox::new(&mut checked, RichText::new(group).strong())
-                            .indeterminate(partial),
-                    )
-                    .changed()
-                {
-                    for member in &members {
-                        toggle_selection_item(selection, member, checked, &items);
-                    }
+                if !members.is_empty() {
+                    selection_group(
+                        ui,
+                        selection,
+                        &i18n::tr(ui.ctx(), &group),
+                        &members,
+                        &items,
+                        true,
+                    );
                 }
-                ui.indent(group, |ui| {
-                    for member in &members {
-                        let item = items.iter().find(|(id, _, _)| id == member).unwrap();
-                        let mut checked = selection_item_checked(selection, member, true);
-                        if ui.checkbox(&mut checked, &item.1).changed() {
-                            toggle_selection_item(selection, member, checked, &items);
-                        }
-                    }
-                });
             }
             let mut checked = selection_item_checked(
                 selection,
                 budgettinker::model::UNCATEGORIZED_CATEGORY,
                 true,
             );
-            if ui
-                .checkbox(&mut checked, "Uncategorized Transactions")
-                .changed()
+            if popover::checkbox(
+                ui,
+                &mut checked,
+                RichText::new("Uncategorized Transactions").font(crate::palette::bold(12.)),
+                false,
+            )
+            .changed()
             {
                 toggle_selection_item(
                     selection,
@@ -174,7 +140,110 @@ pub(super) fn category_selection_items(
                     &items,
                 );
             }
+            let members: Vec<_> = budget
+                .categories
+                .iter()
+                .filter(|c| hidden(c))
+                .map(|c| c.id.as_str())
+                .collect();
+            if !members.is_empty() {
+                selection_group(ui, selection, "Hidden Categories", &members, &items, false);
+            } else {
+                let mut checked = selection.is_all();
+                ui.add_enabled(
+                    false,
+                    egui::Checkbox::new(
+                        &mut checked,
+                        RichText::new("Hidden Categories").font(crate::palette::bold(12.)),
+                    ),
+                );
+            }
         });
+}
+
+fn selection_group(
+    ui: &mut egui::Ui,
+    selection: &mut Selection,
+    label: &str,
+    members: &[&str],
+    items: &[(&str, String, bool)],
+    children: bool,
+) {
+    let checked_count = members
+        .iter()
+        .filter(|id| {
+            let item = items.iter().find(|(item, _, _)| item == *id).unwrap();
+            selection_item_checked(selection, id, item.2)
+        })
+        .count();
+    let mut checked = checked_count == members.len();
+    let partial = checked_count > 0 && !checked;
+    if popover::checkbox(
+        ui,
+        &mut checked,
+        RichText::new(label).font(crate::palette::bold(12.)),
+        partial,
+    )
+    .changed()
+    {
+        for member in members {
+            toggle_selection_item(selection, member, checked, items);
+        }
+    }
+    if children {
+        ui.indent(label, |ui| {
+            for member in members {
+                let item = items.iter().find(|(id, _, _)| id == member).unwrap();
+                let mut checked = selection_item_checked(selection, member, item.2);
+                if popover::checkbox(ui, &mut checked, RichText::new(&item.1).size(12.), false)
+                    .changed()
+                {
+                    toggle_selection_item(selection, member, checked, items);
+                }
+            }
+        });
+    }
+}
+
+pub(super) fn account_selection_items(
+    ui: &mut egui::Ui,
+    selection: &mut Selection,
+    items: &[(&str, String, bool)],
+    budget: &Budget,
+) {
+    egui::ScrollArea::vertical()
+        .max_height(208.)
+        .show(ui, |ui| {
+            for (label, on_budget, closed) in [
+                ("Budget Accounts", true, false),
+                ("Off-Budget Accounts", false, false),
+                ("Closed Accounts", false, true),
+            ] {
+                let members: Vec<_> = budget
+                    .accounts
+                    .iter()
+                    .filter(|a| a.closed == closed && (closed || a.on_budget == on_budget))
+                    .map(|a| a.id.as_str())
+                    .collect();
+                if !members.is_empty() {
+                    selection_group(ui, selection, label, &members, items, true);
+                }
+            }
+        });
+    if let Selection::Selected(ids) = selection {
+        let budget_ids: Vec<_> = budget
+            .accounts
+            .iter()
+            .filter(|a| a.on_budget)
+            .map(|a| &a.id)
+            .collect();
+        if !budget_ids.is_empty()
+            && ids.len() == budget_ids.len()
+            && budget_ids.iter().all(|id| ids.contains(id))
+        {
+            *selection = Selection::BudgetAccounts;
+        }
+    }
 }
 
 /// Whether a particular item is checked. Unlike Selection::ids(), this
@@ -222,11 +291,13 @@ pub(super) fn multi_select_items(
     items: &[(&str, String, bool)],
 ) {
     egui::ScrollArea::vertical()
-        .max_height(280.)
+        .max_height(208.)
         .show(ui, |ui| {
             for (id, label, on_budget) in items {
                 let mut checked = selection_item_checked(selection, id, *on_budget);
-                if ui.checkbox(&mut checked, label.as_str()).changed() {
+                if popover::checkbox(ui, &mut checked, RichText::new(label).size(12.), false)
+                    .changed()
+                {
                     toggle_selection_item(selection, id, checked, items);
                 }
             }

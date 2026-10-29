@@ -29,7 +29,7 @@ pub(super) fn apply_report_period(
             ),
             Budget::month_end(month),
         ),
-        4 => (format!("{}-01-01", &month[..4]), today.to_owned()),
+        4 => (format!("{}-01-01", &month[..4]), Budget::month_end(month)),
         5 => (
             budget
                 .transactions
@@ -47,10 +47,14 @@ pub(super) fn apply_report_period(
                 .max(today)
                 .to_owned(),
         ),
+        7 => {
+            let year = month[..4].parse::<i32>().unwrap() - 1;
+            (format!("{year:04}-01-01"), format!("{year:04}-12-31"))
+        }
         _ => return,
     };
-    filter.from = from;
-    filter.through = through;
+    filter.from = format!("{}-01", &from[..7]);
+    filter.through = Budget::month_end(&through[..7]);
 }
 
 pub(super) fn report_period_caption(filter: &reports::Filter, today: &str) -> String {

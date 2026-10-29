@@ -50,14 +50,15 @@ fn report_month(month: &str) -> String {
     format!("{} {}", names[index], &month[..4])
 }
 
-const PERIODS: [&str; 7] = [
+const PERIODS: [&str; 8] = [
     "This Month",
     "Last Month",
-    "Last 3 Months",
+    "Latest 3 Months",
     "Last 6 Months",
     "This Year",
     "All Dates",
     "Custom",
+    "Last Year",
 ];
 mod periods;
 use periods::*;
@@ -75,7 +76,9 @@ use net_worth::*;
 mod controls;
 mod documents;
 mod labels;
+mod popover;
 mod preferences;
+mod timeframe;
 mod view;
 
 #[cfg(test)]

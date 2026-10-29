@@ -49,11 +49,11 @@ fn relative_periods_follow_today_all_dates_follow_history_and_captions_are_reada
     apply_report_period(&fixture.app.b, 5, &mut filter, "2026-10-27");
     assert_eq!(
         (&*filter.from, &*filter.through),
-        ("2026-07-01", "2026-10-27")
+        ("2026-07-01", "2026-10-31")
     );
     assert_eq!(
         report_period_caption(&filter, "2026-10-27"),
-        "Jul 1, 2026 — Oct 27, 2026 · Oct 2026 is a partial month"
+        "Jul 1, 2026 — Oct 31, 2026 · Oct 2026 is a partial month"
     );
     apply_report_period(&fixture.app.b, 0, &mut filter, "2027-01-05");
     assert_eq!(
@@ -70,5 +70,21 @@ fn relative_periods_follow_today_all_dates_follow_history_and_captions_are_reada
     assert_eq!(filter.through, "2028-02-29");
     assert!(!report_period_caption(&filter, "2028-02-29").contains("partial"));
     apply_report_period(&Budget::new("USD"), 5, &mut filter, "2026-10-27");
-    assert_eq!(filter.from, filter.through);
+    assert_eq!(filter.from, "2026-10-01");
+    assert_eq!(filter.through, "2026-10-31");
+}
+
+#[test]
+fn report_periods_include_whole_months_and_previous_leap_year() {
+    let b = Budget::new("USD");
+    let mut filter = reports::Filter::default();
+    for (period, now, from, through) in [
+        (7, "2025-02-10", "2024-01-01", "2024-12-31"),
+        (2, "2025-01-15", "2024-11-01", "2025-01-31"),
+        (4, "2024-02-10", "2024-01-01", "2024-02-29"),
+    ] {
+        apply_report_period(&b, period, &mut filter, now);
+        assert_eq!(filter.from, from);
+        assert_eq!(filter.through, through);
+    }
 }
