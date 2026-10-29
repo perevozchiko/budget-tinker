@@ -16,7 +16,11 @@ fn git_output(root: &std::path::Path, args: &[&str]) -> Option<String> {
 fn watch_git_path(root: &std::path::Path, name: &str) {
     if let Some(path) = git_output(root, &["rev-parse", "--git-path", name]) {
         let path = std::path::PathBuf::from(path);
-        let path = if path.is_absolute() { path } else { root.join(path) };
+        let path = if path.is_absolute() {
+            path
+        } else {
+            root.join(path)
+        };
         println!("cargo:rerun-if-changed={}", path.display());
     }
 }
