@@ -151,8 +151,27 @@ class ReleasePolicyTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 bump_version.update_version(root, 'invalid version')
 
+    def test_generated_release_notes_categories(self):
+        config = (ROOT / '.github/release.yml').read_text(encoding='utf-8')
+        self.assertTrue(config.startswith('changelog:\n') or 'changelog:\n' in config)
+        self.assertIn('  exclude:\n', config)
+        self.assertIn('      - skip-changelog\n', config)
+        self.assertIn('      - no-release-notes\n', config)
+        for category in (
+            'Breaking Changes', 'New Features', 'Bug Fixes', 'Improvements',
+            'Documentation', 'Maintenance & CI', 'Other Changes',
+        ):
+            self.assertIn(category, config)
+        for label in ('breaking-change', 'feature', 'enhancement', 'bug',
+                      'improvement', 'performance', 'documentation', 'ci',
+                      'dependencies'):
+            self.assertIn(f'        - {label}\n', config)
+        self.assertIn('    - title: "Other Changes"\n      labels:\n        - "*"\n', config)
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertIn('--generate-notes', workflow)
+
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
-        for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:
+        for name in ['.github/workflows/rust.yml', '.github/release.yml', '.gitignore', '.gitattributes']:
             self.assertFalse(source.excluded(Path(name)), name)
         for name in ['target/audit.log', 'dist/BudgetTinker.app/budgettinker',
                      '.env', 'docs/budget.sqlite3', 'docs/budget.budgettinker-wal',

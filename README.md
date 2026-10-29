@@ -94,9 +94,19 @@ mismatches fail CI without publishing a release. Versions containing a prereleas
 suffix (e.g. `-alpha.3`) are marked as pre-releases. Ordinary commits to
 `master` do not publish releases. The tag is not created automatically.
 
+Release notes are generated automatically from merged pull requests using
+[`.github/release.yml`](.github/release.yml). Add a label to each PR to group it:
+`feature` or `enhancement` for new functionality, `bug` for fixes,
+`improvement` or `performance` for optimizations, `documentation` for docs,
+and `ci` or `dependencies` for maintenance. Breaking changes use
+`breaking-change`; `skip-changelog` hides internal-only PRs from release notes.
+PRs without a matching label appear under **Other Changes**. GitHub generates
+these categories when a **new** tagged release is created; existing release notes
+are not rewritten.
+
 The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
-with `master` as its primary branch and an initial source commit. The project is not yet
-publicly released, and no GitHub Releases have been published.
+with `master` as its primary branch. Releases are currently early alpha versions;
+publication happens on version tag pushes only.
 
 To prepare a **local source review ZIP**, including the hidden workflow and ignore files:
 
