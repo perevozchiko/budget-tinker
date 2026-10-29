@@ -28,6 +28,7 @@ fn matrix_mouse_expansion_bulk_controls_and_small_window_rendering() {
             memo: String::new(),
             splits: vec![],
             transfer: None,
+            operation_fx: None,
             check_number: None,
             flag: None,
             cleared: false,

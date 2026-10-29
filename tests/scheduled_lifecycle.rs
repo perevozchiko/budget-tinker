@@ -28,6 +28,7 @@ fn schedule(account: &str, amount: i64, link: Option<String>) -> Scheduled {
             reconciled: false,
             transfer: link,
             splits: vec![],
+            operation_fx: None,
             check_number: None,
             flag: None,
         },

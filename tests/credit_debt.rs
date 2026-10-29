@@ -16,6 +16,7 @@ fn post(b: &mut Budget, account: &str, category: &str, date: &str, amount: i64) 
         reconciled: false,
         transfer: None,
         splits: vec![],
+        operation_fx: None,
         check_number: None,
         flag: None,
     })

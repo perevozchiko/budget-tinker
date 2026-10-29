@@ -137,7 +137,7 @@ fn parse_bytes(b: &Budget, path: &Path, account: &str, source: &[u8]) -> Result<
     let mut count = 0;
     for (index, mut entry) in entries.into_iter().enumerate() {
         entry.payee = b.imported_payee(&entry.payee);
-        let parse = |value: &str| amount(&value.replace(',', ""), currency);
+        let parse = |value: &str| store::imported_amount(value, currency);
         let value = parse(&entry.value)?;
         if value == 0 {
             continue;
@@ -190,6 +190,7 @@ fn parse_bytes(b: &Budget, path: &Path, account: &str, source: &[u8]) -> Result<
         let source_id = bank_id.clone();
         let tid = bank_id.unwrap_or_else(id);
         next.put_transaction(Transaction {
+            operation_fx: None,
             check_number: entry.check_number,
             flag: None,
             id: tid.clone(),

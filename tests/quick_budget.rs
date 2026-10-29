@@ -7,6 +7,7 @@ fn transaction(account: &str, category: &str, amount: i64, date: &str) -> Transa
         date: date.into(),
         payee: "Shop".into(),
         memo: String::new(),
+        operation_fx: None,
         check_number: None,
         amount,
         base_amount: 0,

@@ -1,5 +1,91 @@
 # Development plan
 
+## Multi-currency discovery — 2026-10-29
+
+- [x] Create local `feature/multi-currency` from clean local `master`.
+- [x] Inspect existing currency precision, frozen monthly rates, transfers,
+  valuation, persistence and UI restrictions; collect implementation questions
+  in [MULTI-CURRENCY-QUESTIONS.md](MULTI-CURRENCY-QUESTIONS.md).
+- [x] Confirm one base currency selected in budget settings, with accounts in
+  different currencies including the base currency.
+- [ ] Record remaining owner decisions on transaction valuation,
+  exchange fees, revaluation, historical rates and first-version scope.
+- [ ] Turn the answers into numerical acceptance examples, a data/migration
+  design and staged implementation plan before changing financial behavior.
+
+## Manual multi-currency v1 — implementation, 2026-10-29
+
+Authority: [approved specification v2](MULTI-CURRENCY-SPECIFICATION-v2.md)
+and [owner amendments](MULTI-CURRENCY-AMENDMENTS.md). Together they supersede
+the open product questions above and in
+MULTI-CURRENCY-QUESTIONS.md. Engineering choices and baseline evidence:
+[MULTI-CURRENCY-IMPLEMENTATION.md](MULTI-CURRENCY-IMPLEMENTATION.md).
+Work stays on local `feature/multi-currency`; no commit or publication requested.
+
+- [x] Phase 0: audit current model, commands, storage, importers, schedules,
+  reports, reconciliation, Undo and account grouping; retain baseline results.
+- [x] Phase 0: run repeatable synthetic 100-account / 100k-transaction /
+  240-month baseline; document aggregation and invalidation design before
+  changing financial semantics. Custom 50-group scenario is unavailable in
+  the current product (three fixed account sections); track separately.
+- [ ] Phase 1: money/currency, independent frozen operation FX, monthly rate
+  lifecycle, immutable budget base, account currency selection/history lock,
+  inline missing-rate entry, explicit optional lookup acceptance and safe
+  current-schema upgrade. AC-01/08/11/13/16/20/21.
+  - [x] First increment: TRY, centralized precision metadata, strict space-grouped
+    input (`1 500.00`), ISO money display, checked conversion and symmetric rounding.
+  - [x] Next increment: schema/SQLite-safe backup and rollback plus independent
+    operation FX validation; preserve current frozen amounts and split rounding.
+    - [x] Prepare detached operation locks with copied MonthlyDefault quotes,
+      stable split identities/base amounts and independent validation; preflight
+      the current document, matched originals and every retained revision.
+    - [x] Add verified SQLite online backup, including WAL and revision history;
+      reject stale preflight and backup failures without changing the source.
+    - [x] Activate the new schema through commands/readers, exact-base/split
+      overrides and native confirmation, then test atomic replacement, failed
+      upgrade rollback, reopen and incompatible Undo-stack reset. Detached
+      preparation alone does not complete the upgrade or enable rate editing.
+      Explicit activation is now available in Budget Properties → Upgrade currency
+      data; startup and new budgets remain v1 until that confirmation. V2 commands,
+      readers, exact-base/split overrides, converted revisions and Undo reset are
+      tested. Exact-base editor controls are now wired in the increment below;
+      monthly-rate replacement remains outstanding.
+  - [x] Operation FX editor increment: v2 ordinary foreign rows accept a manual
+    quote/date or exact signed base amount, with explicit signed split bases.
+    Missing-rate entry retains the draft; older suggestions are labeled Stale
+    and require explicit selection/Save. Preserve confirmed FX through command
+    validation, persistence and Undo/Redo without creating monthly quotes.
+  - [x] Monthly lifecycle model increment: v2 current-month quote replacement,
+    explicit post-month finalization, Incomplete/Provisional/Finalized status,
+    earlier-rate account previews, historical correction proposal/audit and
+    selected/adjacent-month valuation impacts; retain frozen operations and
+    exercise SQLite commit/Undo/Redo and save failure through App state.
+    Native monthly editor, correction confirmation and status/report presentation
+    remain outstanding; this completes the command foundation only.
+  - [ ] Then wire creation/account/editor and provisional/historical FX flows
+    through existing command, persistence and Undo patterns.
+- [ ] Phase 2: merchant/account/base editor, posted date, native/base split sums,
+  linked partial and split refunds with capped category credits and FX excess;
+  explicit scheduled foreign posting; Pending FX bank previews, retaining all
+  existing import formats. AC-02/10/17/18.
+- [ ] Phase 3: actual exchange principals, independent frozen reference, fees
+  including third-account charges, budget boundaries, In Transit and failure /
+  reversal, one atomic Undo unit. AC-03/06/07/14/15/19.
+- [ ] Phase 4: authoritative vs Estimated/Incomplete valuations, explicit month
+  finalization and historical correction previews/audit, earned-income/expense/
+  FX/revaluation separation, negative balances/debts, exact ledger and envelope
+  bridges. AC-04/05/08/09/15/16/22.
+- [ ] Phase 5: lossless validated JSON replacement with safe backup and Undo
+  reset; atomic Undo/Redo, measured aggregate/index optimization and invalidation
+  tests; reports, print/CSV and native UI stabilization. AC-12/14/20/22.
+- [ ] Complete all 12 required test areas, 22 acceptance cases and three priority
+  native flows; record model/integration, egui, live GUI, packaging and performance
+  separately. A first increment is not completion of Phase 1 or v1.
+
+Base/account/operation currencies remain separate; monthly corrections must never
+reprice frozen operation amounts. No automatic network refresh, custom currencies,
+new recurring FX exchanges, bank cross-statement pairing, tax lots or base switching.
+
 ## Current repository status
 
 The private repository `perevozchiko/budget-tinker` has an initial source commit on

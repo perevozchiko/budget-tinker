@@ -53,7 +53,8 @@ impl Budget {
             None
         };
         if opening != 0 {
-            self.transactions.push(Transaction {
+            let mut posting = Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),
@@ -70,7 +71,9 @@ impl Budget {
                 reconciled: false,
                 transfer: None,
                 splits: vec![],
-            });
+            };
+            self.freeze_posting(&mut posting)?;
+            self.transactions.push(posting);
         }
         Ok(account)
     }

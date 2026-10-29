@@ -54,6 +54,10 @@ impl Budget {
     /// A zero-net split can still move money between categories. Freeze its
     /// exchange rate even though the account movement itself is zero.
     pub fn transaction_value(&self, t: &Transaction) -> Result<(i64, Option<String>)> {
+        if let Some(fx) = &t.operation_fx {
+            fx.validate_transaction(self, t)?;
+            return Ok((fx.base_amount, t.snapshot.clone()));
+        }
         let account = self.account(&t.account)?;
         if t.amount == 0 && account.currency != self.base && t.splits.iter().any(|s| s.amount != 0)
         {
@@ -68,9 +72,13 @@ impl Budget {
     /// Convert parts using the transaction's frozen rate. The final nonzero
     /// part absorbs rounding; zero parts never acquire a rounding adjustment.
     pub fn split_base_amounts(&self, t: &Transaction) -> Result<Vec<i64>> {
+        if let Some(fx) = &t.operation_fx {
+            fx.validate_transaction(self, t)?;
+            return Ok(fx.splits.iter().map(|s| s.base_amount).collect());
+        }
         let account = self.account(&t.account)?;
         let last = t.splits.iter().rposition(|s| s.amount != 0);
-        let mut remainder = t.base_amount;
+        let mut remainder = i128::from(t.base_amount);
         t.splits
             .iter()
             .enumerate()
@@ -78,7 +86,7 @@ impl Budget {
                 let value = if s.amount == 0 {
                     0
                 } else if Some(i) == last {
-                    remainder
+                    i64::try_from(remainder).map_err(|_| "Split base amount overflow")?
                 } else if account.currency == self.base {
                     s.amount
                 } else {
@@ -89,7 +97,7 @@ impl Budget {
                         .ok_or("Missing exchange snapshot for split transaction")?;
                     convert(s.amount, &account.currency, &self.base, snapshot.rate)?
                 };
-                remainder -= value;
+                remainder -= i128::from(value);
                 Ok(value)
             })
             .collect()

@@ -1,10 +1,26 @@
 use super::*;
 
 #[test]
+fn grouped_input_posts_exactly_and_ambiguous_comma_preserves_draft() {
+    let (mut b, a) = budget();
+    let mut draft = Draft::new(&b, Some(&a), None).unwrap();
+    draft.payee = "Synthetic grouped amount".into();
+    draft.outflow = "1,23".into();
+    assert!(draft.build(&b).is_err());
+    assert_eq!(draft.outflow, "1,23");
+    assert_eq!(draft.payee, "Synthetic grouped amount");
+    assert_eq!(b.transactions.len(), 1);
+    draft.outflow = "1 234.56".into();
+    b.put_transaction(draft.build(&b).unwrap()).unwrap();
+    assert_eq!(b.transactions.last().unwrap().amount, -123456);
+    assert_eq!(b.balance(&a, None, false), -23456);
+}
+
+#[test]
 fn register_expense_uses_account_currency_and_persists_as_negative() {
     let (mut b, a) = budget();
     let mut d = Draft::new(&b, Some(&a), None).unwrap();
-    d.outflow = "12,34".into();
+    d.outflow = "12.34".into();
     d.payee = "Shop".into();
     let t = d.build(&b).unwrap();
     assert_eq!((t.amount, t.base_amount), (-1234, -1234));

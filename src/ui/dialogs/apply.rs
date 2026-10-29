@@ -41,6 +41,7 @@ impl App {
                     })
                     .collect::<Result<Vec<_>>>()?;
                 let t = Transaction {
+                    operation_fx: None,
                     check_number: tid
                         .as_ref()
                         .and_then(|id| b.transactions.iter().find(|t| &t.id == id))

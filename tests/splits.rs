@@ -31,6 +31,7 @@ fn row(account: &str, parts: Vec<Split>) -> Transaction {
         snapshot: None,
         category: None,
         cleared: false,
+        operation_fx: None,
         check_number: None,
         flag: None,
         income_month: None,

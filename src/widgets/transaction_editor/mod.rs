@@ -77,6 +77,7 @@ pub enum Action {
 
 #[derive(Clone, Default)]
 struct SplitDetails {
+    id: String,
     income_next: Option<bool>,
     payee: String,
     memo: String,
@@ -86,6 +87,7 @@ struct SplitDetails {
 impl SplitDetails {
     fn from_part(part: &Split, date: &str) -> Self {
         Self {
+            id: part.id.clone(),
             income_next: part.income_month.as_ref().map(|m| m.as_str() > &date[..7]),
             payee: part.payee.clone().unwrap_or_default(),
             memo: part.memo.clone(),
@@ -93,6 +95,19 @@ impl SplitDetails {
             transfer_to: part.transfer.as_ref().map(|x| x.account.clone()),
         }
     }
+}
+
+#[derive(Default)]
+struct FxDraft {
+    enabled: bool,
+    context: (String, String),
+    rate: String,
+    date: String,
+    suggestion: Option<budgettinker::model::operation_fx::OperationRate>,
+    stale: bool,
+    exact: bool,
+    base: String,
+    parts: Vec<String>,
 }
 
 pub struct Draft {
@@ -116,9 +131,11 @@ pub struct Draft {
     complete_payee: bool,
     completed_account: String,
     automatic_amount: Option<(String, String)>,
+    fx: FxDraft,
 }
 mod draft;
 mod editor;
+mod fx;
 
 #[cfg(test)]
 #[path = "tests/mod.rs"]

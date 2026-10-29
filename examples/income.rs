@@ -21,6 +21,7 @@ fn main() {
         ("Groceries", -10_000, None, Some(b.categories[0].id.clone())),
     ] {
         b.put_transaction(Transaction {
+            operation_fx: None,
             check_number: None,
             flag: None,
             id: id(),

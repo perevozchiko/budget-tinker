@@ -105,6 +105,7 @@ fn donut_other_click_detail_and_back_preserve_period_and_colors() {
             memo: String::new(),
             splits: vec![],
             transfer: None,
+            operation_fx: None,
             check_number: None,
             flag: None,
             cleared: false,
@@ -236,6 +237,7 @@ fn spending_chart_draws_positive_and_refund_segments_with_stable_legend_and_tool
                 memo: String::new(),
                 splits: vec![],
                 transfer: None,
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 cleared: false,
@@ -273,7 +275,7 @@ fn spending_chart_draws_positive_and_refund_segments_with_stable_legend_and_tool
     render(size, 0., vec![]);
     let output = render(size, 0.1, vec![]);
     let texts = text_shapes(&output.shapes);
-    for label in ["Travel", "$7.50", "-$2.00"] {
+    for label in ["Travel", "7.50 USD", "-2.00 USD"] {
         assert!(texts.iter().any(|(text, _)| text == label), "{label}");
     }
     let segments = output
@@ -297,8 +299,8 @@ fn spending_chart_draws_positive_and_refund_segments_with_stable_legend_and_tool
     assert!(
         text_shapes(&hovered.shapes)
             .iter()
-            .any(|(text, _)| text.contains("Travel: -$2.00")
-                && text.contains("Total Spending: -$2.00")),
+            .any(|(text, _)| text.contains("Travel: -2.00 USD")
+                && text.contains("Total Spending: -2.00 USD")),
         "{:?}",
         text_shapes(&hovered.shapes)
     );

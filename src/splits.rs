@@ -211,7 +211,7 @@ impl Budget {
                 self.transactions.remove(index);
             } else {
                 if !scheduled {
-                    (peer.base_amount, peer.snapshot) = self.transaction_value(&peer)?;
+                    self.price_posting(&mut peer)?;
                 }
                 self.transactions[index] = peer;
             }
@@ -238,7 +238,7 @@ impl Budget {
             }
             t.set_date(date.into());
             if !scheduled {
-                (t.base_amount, t.snapshot) = self.transaction_value(&t)?;
+                self.price_posting(&mut t)?;
             }
             self.transactions[i] = t;
         }
@@ -317,8 +317,7 @@ impl Budget {
                         return Err("Reconciled split counterpart cannot be changed".into());
                     }
                     if !scheduled {
-                        (updated.base_amount, updated.snapshot) =
-                            self.transaction_value(&updated)?;
+                        self.price_posting(&mut updated)?;
                     }
                     self.transactions[index] = updated;
                     continue;
@@ -347,6 +346,7 @@ impl Budget {
                     snapshot: None,
                     category: None,
                     cleared: false,
+                    operation_fx: None,
                     check_number: None,
                     flag: None,
                     income_month: None,
@@ -370,10 +370,11 @@ impl Budget {
                 peer.memo = part.memo.clone();
             }
             if scheduled {
+                peer.operation_fx = None;
                 peer.base_amount = 0;
                 peer.snapshot = None;
             } else {
-                (peer.base_amount, peer.snapshot) = self.transaction_value(&peer)?;
+                self.price_posting(&mut peer)?;
             }
             if let Some(index) = index {
                 self.transactions[index] = peer;

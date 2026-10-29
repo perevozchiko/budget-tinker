@@ -105,8 +105,27 @@ impl Selection {
 pub type Result<T> = std::result::Result<T, String>;
 pub const RATE_SCALE: i64 = 100_000_000;
 pub const CURRENCIES: &[&str] = &[
-    "EUR", "RSD", "USD", "RUB", "GBP", "CHF", "CAD", "AUD", "JPY", "KWD",
+    "EUR", "RSD", "USD", "RUB", "TRY", "GBP", "CHF", "CAD", "AUD", "JPY", "KWD",
 ];
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CurrencyMetadata {
+    pub code: &'static str,
+    pub decimals: u32,
+}
+
+pub fn currency_metadata(currency: &str) -> Option<CurrencyMetadata> {
+    CURRENCIES
+        .iter()
+        .find(|code| **code == currency)
+        .map(|code| CurrencyMetadata {
+            code,
+            decimals: match *code {
+                "JPY" => 0,
+                "KWD" => 3,
+                _ => 2,
+            },
+        })
+}
 pub fn id() -> String {
     Uuid::new_v4().to_string()
 }
@@ -128,41 +147,47 @@ pub fn valid_month(s: &str) -> bool {
     s.len() == 7 && NaiveDate::parse_from_str(&format!("{s}-01"), "%Y-%m-%d").is_ok()
 }
 pub fn decimals(currency: &str) -> u32 {
-    match currency {
-        "JPY" => 0,
-        "KWD" => 3,
-        _ => 2,
-    }
+    currency_metadata(currency).map_or(2, |metadata| metadata.decimals)
 }
 pub fn parse_fixed(s: &str, digits: u32) -> Result<i64> {
-    let s = s.trim().replace(',', ".");
+    if digits > 18 {
+        return Err("Unsupported decimal precision".into());
+    }
+    let s = s.trim();
     let negative = s.starts_with('-');
-    let raw = s.strip_prefix(['-', '+']).unwrap_or(&s);
+    let raw = s.strip_prefix(['-', '+']).unwrap_or(s);
     let parts: Vec<_> = raw.split('.').collect();
-    if parts.len() > 2 || parts[0].is_empty() || !parts[0].bytes().all(|c| c.is_ascii_digit()) {
-        return Err("Введите число, например 1234,56".into());
+    let groups: Vec<_> = parts[0].split(' ').collect();
+    if parts.len() > 2
+        || groups
+            .iter()
+            .any(|g| g.is_empty() || !g.bytes().all(|c| c.is_ascii_digit()))
+        || (groups.len() > 1 && (groups[0].len() > 3 || groups[1..].iter().any(|g| g.len() != 3)))
+    {
+        return Err("Enter a number, for example 1 500.00 (space groups, decimal point)".into());
     }
     let fraction = parts.get(1).copied().unwrap_or("");
     if fraction.len() > digits as usize || !fraction.bytes().all(|c| c.is_ascii_digit()) {
-        return Err(format!("Допустимо знаков после запятой: {digits}"));
+        return Err(format!("Maximum decimal places: {digits}"));
     }
-    let whole: i64 = parts[0].parse().map_err(|_| "Слишком большая сумма")?;
+    let whole: i64 = groups.concat().parse().map_err(|_| "Amount is too large")?;
     let frac: i64 = if fraction.is_empty() {
         0
     } else {
-        fraction.parse().map_err(|_| "Некорректная дробь")?
+        fraction.parse().map_err(|_| "Invalid fractional amount")?
     };
     let amount = whole
         .checked_mul(10_i64.pow(digits))
         .and_then(|v| v.checked_add(frac * 10_i64.pow(digits - fraction.len() as u32)))
-        .ok_or("Слишком большая сумма")?;
+        .ok_or("Amount is too large")?;
     if amount > 100_000_000_000_000 {
-        return Err("Слишком большая сумма".into());
+        return Err("Amount is too large".into());
     }
     Ok(if negative { -amount } else { amount })
 }
 pub fn amount(s: &str, currency: &str) -> Result<i64> {
-    parse_fixed(s, decimals(currency))
+    let metadata = currency_metadata(currency).ok_or("Unsupported currency")?;
+    parse_fixed(s, metadata.decimals)
 }
 pub fn plain(value: i64, currency: &str) -> String {
     let digits = decimals(currency);
@@ -181,20 +206,49 @@ pub fn plain(value: i64, currency: &str) -> String {
     }
 }
 pub fn money(value: i64, currency: &str) -> String {
-    format!("{} {currency}", plain(value, currency))
+    format!("{} {currency}", grouped(value, currency))
+}
+/// Space grouping and decimal point for display; `plain` remains suitable for machine exports.
+pub fn grouped(value: i64, currency: &str) -> String {
+    let raw = plain(value, currency);
+    let (whole, fraction) = raw
+        .split_once('.')
+        .map_or((raw.as_str(), None), |(w, f)| (w, Some(f)));
+    let (sign, digits) = whole.strip_prefix('-').map_or(("", whole), |v| ("-", v));
+    let mut result = sign.to_owned();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            result.push(' ');
+        }
+        result.push(c);
+    }
+    if let Some(fraction) = fraction {
+        result.push('.');
+        result.push_str(fraction);
+    }
+    result
 }
 pub fn convert(value: i64, from: &str, to: &str, rate: i64) -> Result<i64> {
-    if rate <= 0 {
-        return Err("Курс должен быть положительным".into());
+    if currency_metadata(from).is_none() || currency_metadata(to).is_none() {
+        return Err("Unsupported currency".into());
     }
-    let numerator = value as i128 * rate as i128 * 10_i128.pow(decimals(to));
+    if rate <= 0 {
+        return Err("Exchange rate must be positive".into());
+    }
+    let numerator = i128::from(value)
+        .checked_mul(i128::from(rate))
+        .and_then(|v| v.checked_mul(10_i128.pow(decimals(to))))
+        .ok_or("Conversion overflow")?;
     let denominator = RATE_SCALE as i128 * 10_i128.pow(decimals(from));
-    let rounded = if numerator < 0 {
-        -((-numerator + denominator / 2) / denominator)
-    } else {
-        (numerator + denominator / 2) / denominator
-    };
-    i64::try_from(rounded).map_err(|_| "Переполнение при конвертации".into())
+    let quotient = numerator / denominator;
+    let remainder = numerator % denominator;
+    let rounded = quotient
+        + if remainder.abs() * 2 >= denominator {
+            numerator.signum()
+        } else {
+            0
+        };
+    i64::try_from(rounded).map_err(|_| "Conversion overflow".into())
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -220,6 +274,8 @@ pub struct Category {
 }
 #[derive(Clone, Default, Serialize, Deserialize, Debug)]
 pub struct Split {
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub id: String,
     pub category: Option<String>,
     pub amount: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -279,6 +335,8 @@ pub struct Transaction {
     pub memo: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub check_number: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operation_fx: Option<operation_fx::FrozenOperation>,
     pub amount: i64,
     pub base_amount: i64,
     pub snapshot: Option<String>,
@@ -363,6 +421,8 @@ pub struct Budget {
     #[serde(default)]
     pub overspending_rules: BTreeMap<String, OverspendingRule>,
     pub snapshots: Vec<Snapshot>,
+    #[serde(default)]
+    pub monthly_fx: MonthlyFxState,
     pub scheduled: Vec<Scheduled>,
     #[serde(default)]
     pub payee_rules: BTreeMap<String, PayeeRule>,
@@ -376,10 +436,13 @@ mod accounts;
 mod allocations;
 mod categories;
 mod initialization;
+mod monthly_fx;
+pub use monthly_fx::*;
 mod quick_budget;
 mod reconciliation;
 mod schedules;
 mod totals;
 pub use quick_budget::QuickBudget;
+pub mod operation_fx;
 mod transactions;
 mod valuation;

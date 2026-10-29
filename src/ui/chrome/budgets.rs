@@ -32,6 +32,8 @@ impl App {
             None => existing.expect("read-only budget validation"),
         };
         self.persist_report_preferences();
+        self.chrome.upgrade = None;
+        self.chrome.monthly = None;
         self.store = store;
         self.b = budget;
         self.preferences.reports = crate::preferences::Preferences::load(path)

@@ -19,10 +19,13 @@ pub(super) enum Overlay {
     Help(String),
     SavedVersion,
     LoadVersion(i64),
+    Upgraded(String),
 }
 #[derive(Default)]
 pub(super) struct Chrome {
     pub screen: Option<Screen>,
+    pub upgrade: Option<store::upgrade::UpgradePreview>,
+    pub monthly: Option<monthly_fx::MonthlyEditor>,
     pub overlay: Option<Overlay>,
     pub name: String,
     pub currency: String,
@@ -162,9 +165,11 @@ mod account_form;
 mod budgets;
 mod commands;
 mod dialogs;
+mod monthly_fx;
 mod payees;
 mod printing;
 mod screens;
+mod upgrade;
 
 #[cfg(test)]
 mod tests;

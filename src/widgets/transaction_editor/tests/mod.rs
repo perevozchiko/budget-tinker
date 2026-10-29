@@ -98,6 +98,7 @@ fn payee_fixture() -> (Budget, String, String, String) {
 mod categories;
 mod dates;
 mod entries;
+mod fx;
 mod layout;
 mod payees;
 mod schedules;

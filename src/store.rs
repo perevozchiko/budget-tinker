@@ -1,4 +1,5 @@
 use crate::model::*;
+pub mod upgrade;
 use rusqlite::{Connection, params};
 use std::{
     fs,
@@ -50,6 +51,20 @@ impl Store {
         validate(budget)?;
         let json = serde_json::to_string(budget).map_err(|e| e.to_string())?;
         let tx = self.conn.transaction().map_err(|e| e.to_string())?;
+        use rusqlite::OptionalExtension;
+        let previous: Option<String> = tx
+            .query_row("SELECT json FROM document WHERE id=1", [], |r| r.get(0))
+            .optional()
+            .map_err(|e| e.to_string())?;
+        if let Some(previous) = previous {
+            let previous: Budget = serde_json::from_str(&previous).map_err(|e| e.to_string())?;
+            if previous.version != budget.version {
+                return Err("Schema changes require the backed upgrade command".into());
+            }
+            if previous.version == 2 && previous.base != budget.base {
+                return Err("The budget base currency is immutable".into());
+            }
+        }
         tx.execute(
             "INSERT INTO revisions(json) SELECT json FROM document WHERE id=1",
             [],
@@ -114,7 +129,7 @@ pub fn default_path() -> PathBuf {
     }
 }
 pub fn validate(b: &Budget) -> Result<()> {
-    if b.version != 1 || !CURRENCIES.contains(&b.base.as_str()) {
+    if ![1, 2].contains(&b.version) || !CURRENCIES.contains(&b.base.as_str()) {
         return Err("Неподдерживаемая версия бюджета или валюта".into());
     }
     let unique = |ids: Vec<&str>| {
@@ -155,6 +170,7 @@ pub fn validate(b: &Budget) -> Result<()> {
             b.account(account)?;
         }
     }
+    b.validate_monthly_fx()?;
     for s in &b.snapshots {
         if !valid_month(&s.month)
             || s.rate <= 0
@@ -193,11 +209,15 @@ pub fn validate(b: &Budget) -> Result<()> {
         {
             return Err("Неизвестная категория".into());
         }
+        if (b.version == 2) != t.operation_fx.is_some() {
+            return Err("Operation FX is required exactly for schema v2 postings".into());
+        }
         let (base, snapshot) = b.transaction_value(t)?;
         if base != t.base_amount || snapshot != t.snapshot {
             return Err("Сумма операции не соответствует сохранённому снимку курса".into());
         }
         b.validate_splits(t)?;
+        b.split_base_amounts(t)?;
         if t.reconciled && !t.cleared {
             return Err("Сверенная операция должна быть подтверждена".into());
         }
@@ -223,6 +243,9 @@ pub fn validate(b: &Budget) -> Result<()> {
                 .is_some_and(|c| !b.categories.iter().any(|x| x.id == *c))
         {
             return Err("Некорректный план операции".into());
+        }
+        if s.transaction.operation_fx.is_some() {
+            return Err("Scheduled templates must not contain posted operation FX".into());
         }
         b.validate_splits(&s.transaction)?;
     }
@@ -358,6 +381,20 @@ pub fn export_csv(b: &Budget, path: &Path) -> Result<()> {
     }
     w.flush().map_err(|e| e.to_string())
 }
+/// Bank files may use comma grouping even though product input uses spaces.
+/// Preserve supported statement conventions without accepting malformed groups.
+pub(crate) fn imported_amount(value: &str, currency: &str) -> Result<i64> {
+    let value = value.trim();
+    if value.contains(',') {
+        if value.contains(' ') {
+            return Err("Mixed amount grouping separators".into());
+        }
+        amount(&value.replace(',', " "), currency)
+    } else {
+        amount(value, currency)
+    }
+}
+
 pub fn import_csv(b: &Budget, path: &Path, account: &str) -> Result<(Budget, usize)> {
     import_csv_bytes(b, &fs::read(path).map_err(|e| e.to_string())?, account)
 }
@@ -409,11 +446,7 @@ pub(crate) fn import_csv_bytes(
             if s.is_empty() {
                 Ok(0)
             } else {
-                amount(
-                    &s.replace(['$', '€', '£', ' '], "")
-                        .replace(",", if s.contains('.') { "" } else { "," }),
-                    &a.currency,
-                )
+                imported_amount(&s.replace(['$', '€', '£'], ""), &a.currency)
             }
         };
         let value = if column("Amount").is_some() {
@@ -472,6 +505,7 @@ pub(crate) fn import_csv_bytes(
             }
         };
         let t = Transaction {
+            operation_fx: None,
             check_number: (!get("Check Number").is_empty()).then(|| get("Check Number").to_owned()),
             flag: None,
             id: id(),

@@ -22,6 +22,7 @@ fn main() {
     for c in b.categories.clone() {
         b.allocate(&month, &c.id, 10_000).unwrap();
         b.put_transaction(Transaction {
+            operation_fx: None,
             check_number: None,
             flag: None,
             id: id(),

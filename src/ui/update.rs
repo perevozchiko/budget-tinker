@@ -20,6 +20,22 @@ impl eframe::App for App {
             }
         }
         self.preferences.language.install(ctx);
+        if self.chrome.monthly.is_some() {
+            self.native_menu.set_enabled(false, false, false);
+            egui::CentralPanel::default()
+                .frame(Frame::new().fill(TEAL))
+                .show(ctx, |_| {});
+            self.monthly_fx_dialog(ctx);
+            return;
+        }
+        if self.chrome.upgrade.is_some() {
+            self.native_menu.set_enabled(false, false, false);
+            egui::CentralPanel::default()
+                .frame(Frame::new().fill(TEAL))
+                .show(ctx, |_| {});
+            self.upgrade_dialog(ctx);
+            return;
+        }
         self.menu_commands(ctx);
         let title = format!("BudgetTinker — {}", i18n::tr(ctx, &self.b.name));
         if self.window_title != title {

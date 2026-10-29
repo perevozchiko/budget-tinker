@@ -34,6 +34,7 @@ fn main() {
             snapshot: None,
             category,
             income_month: None,
+            operation_fx: None,
             check_number: None,
             flag,
             cleared,

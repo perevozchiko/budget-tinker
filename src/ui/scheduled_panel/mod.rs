@@ -34,6 +34,7 @@ pub(super) fn schedule_transfer(b: &mut Budget, draft: TransferDraft<'_>) -> Res
             repeat: Some(draft.repeat),
             anchor_day: None,
             transaction: Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),

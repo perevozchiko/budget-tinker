@@ -54,6 +54,7 @@ impl Budget {
         let mut next = self.clone();
         if difference != 0 {
             next.put_transaction(Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),
@@ -96,6 +97,7 @@ impl Budget {
             return Ok(());
         }
         self.put_transaction(Transaction {
+            operation_fx: None,
             check_number: None,
             flag: None,
             id: id(),

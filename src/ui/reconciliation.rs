@@ -349,7 +349,7 @@ mod tests {
             let output = frame(&mut f, size, vec![]);
             let row = rect(&output, "Pending coffee").unwrap();
             assert!(rect(&output, "Later coffee").is_none());
-            assert!(rect(&output, "Difference: $5.00").is_some());
+            assert!(rect(&output, "Difference: 5.00 USD").is_some());
             let column = rect(&output, "C").unwrap();
             click(&mut f, size, egui::pos2(column.center().x, row.center().y));
             assert!(
@@ -362,7 +362,7 @@ mod tests {
                     .cleared
             );
             let output = frame(&mut f, size, vec![]);
-            assert!(rect(&output, "Difference: $0.00").is_some());
+            assert!(rect(&output, "Difference: 0.00 USD").is_some());
             let before_finish = document(&f.app.b);
             click_text(&mut f, size, "Finish Reconciliation");
             assert!(f.app.reconciliation.is_none());

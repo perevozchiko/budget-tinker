@@ -10,6 +10,7 @@ fn fixture() -> (Budget, String, String) {
 }
 fn post(b: &mut Budget, account: &str, category: &str, date: &str, amount: i64) {
     b.put_transaction(Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),
@@ -134,6 +135,7 @@ fn foreign_splits_use_snapshot_rounding_and_summary_includes_revaluation() {
         .unwrap();
     let other = b.categories[1].id.clone();
     let t = Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),

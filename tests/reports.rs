@@ -19,6 +19,7 @@ fn transaction(
     payee: &str,
 ) -> Transaction {
     Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),

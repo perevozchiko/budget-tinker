@@ -166,39 +166,10 @@ impl LocalizedResponse for Response {
     }
 }
 pub fn number(value: i64, currency: &str) -> String {
-    let raw = budgettinker::model::plain(value, currency);
-    let (whole, decimal) = raw
-        .split_once('.')
-        .map_or((raw.as_str(), None), |(a, b)| (a, Some(b)));
-    let (sign, digits) = whole.strip_prefix('-').map_or(("", whole), |v| ("-", v));
-    let mut result = sign.to_owned();
-    for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
-            result.push(',');
-        }
-        result.push(c);
-    }
-    if let Some(decimal) = decimal {
-        result.push('.');
-        result.push_str(decimal);
-    }
-    result
+    budgettinker::model::grouped(value, currency)
 }
 pub fn money(value: i64, currency: &str) -> String {
-    let symbol = match currency {
-        "EUR" => "€",
-        "USD" => "$",
-        "GBP" => "£",
-        "JPY" => "¥",
-        "RUB" => "₽",
-        _ => return format!("{} {currency}", number(value, currency)),
-    };
-    let number = number(value, currency);
-    if let Some(n) = number.strip_prefix('-') {
-        format!("-{symbol}{n}")
-    } else {
-        format!("{symbol}{number}")
-    }
+    budgettinker::model::money(value, currency)
 }
 
 #[cfg(test)]
@@ -267,8 +238,8 @@ mod tests {
 
     #[test]
     fn formatting_never_changes_stored_minor_units() {
-        assert_eq!(number(123456789, "EUR"), "1,234,567.89");
-        assert_eq!(money(-123456, "USD"), "-$1,234.56");
-        assert_eq!(number(123456, "JPY"), "123,456");
+        assert_eq!(number(123456789, "EUR"), "1 234 567.89");
+        assert_eq!(money(-123456, "USD"), "-1 234.56 USD");
+        assert_eq!(number(123456, "JPY"), "123 456");
     }
 }

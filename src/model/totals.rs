@@ -232,17 +232,17 @@ impl Budget {
     }
     pub fn net_worth(&self, month: &str, on_budget_only: bool) -> Result<i64> {
         let end = Self::month_end(month);
-        let mut sum = 0;
+        let mut sum = 0_i128;
         for a in &self.accounts {
             if on_budget_only && !a.on_budget {
                 continue;
             }
             let balance = self.balance(&a.id, Some(&end), false);
             if balance != 0 {
-                sum += self.to_base(balance, &a.currency, month)?.0;
+                sum += i128::from(self.to_base(balance, &a.currency, month)?.0);
             }
         }
-        Ok(sum)
+        i64::try_from(sum).map_err(|_| "Net worth overflow".into())
     }
     pub fn available(&self, month: &str) -> Result<i64> {
         Ok(self.net_worth(month, true)?

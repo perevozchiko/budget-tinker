@@ -36,6 +36,7 @@ fn main() {
         reconciled: false,
         transfer: None,
         splits: vec![],
+        operation_fx: None,
         check_number: None,
         flag: None,
     })

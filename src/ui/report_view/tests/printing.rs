@@ -18,7 +18,7 @@ fn graphical_print_uses_current_filters_drill_and_preview_without_changing_budge
     assert!(json.contains("Payees: Shop"));
     assert!(json.contains("Accounts: Budget Accounts"));
     assert!(json.contains("Detail: Chosen category / 2026-10"));
-    assert!(json.contains("$10.00"));
+    assert!(json.contains("10.00 USD"));
     assert!(!json.contains("500.00"));
     fixture.app.chrome.print_preview = true;
     for zoom in [0.5, 1.0, 2.0] {

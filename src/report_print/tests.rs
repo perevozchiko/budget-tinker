@@ -26,6 +26,7 @@ fn fixture(months: usize) -> (Budget, Filter) {
             reconciled: false,
             transfer: None,
             splits: vec![],
+            operation_fx: None,
             check_number: None,
             flag: None,
         })

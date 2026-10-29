@@ -57,12 +57,20 @@ impl App {
                                 section(ui, "Форматы валюты и даты:", |ui| {
                                     egui::Grid::new("budget_formats").spacing([12., 8.]).show(ui, |ui| {
                                         ui.l_label("Валюта:");
-                                        ui.add_enabled_ui(screen == Screen::New || (self.b.accounts.is_empty() && self.b.snapshots.is_empty() && self.b.allocations.is_empty()), |ui| { ui.visuals_mut().override_text_color = Some(INK); currency_combo(ui, "property_currency", &mut c.currency); });
+                                        ui.add_enabled_ui(screen == Screen::New, |ui| { ui.visuals_mut().override_text_color = Some(INK); currency_combo(ui, "property_currency", &mut c.currency); });
                                         ui.end_row();
-                                        ui.l_label("Формат суммы:"); ui.label(format!("{}9,876.54", match c.currency.as_str() { "EUR" => "€", "USD" => "$", "GBP" => "£", _ => "" })); ui.end_row();
+                                        ui.l_label("Формат суммы:"); ui.label(format!("9 876.54 {}", c.currency)); ui.end_row();
                                         ui.l_label("Формат даты:"); ui.label(today()); ui.end_row();
                                     });
                                 });
+                                if screen == Screen::Properties && self.b.version == 1
+                                    && classic::button(ui, "Upgrade currency data…").clicked() {
+                                    match self.store.preflight_upgrade() {
+                                        Ok(preview) => c.upgrade = Some(preview),
+                                        Err(error) => c.error = error,
+                                    }
+                                }
+                                if screen == Screen::Properties && self.b.version == 2 && classic::button(ui, "Monthly exchange rates…").clicked() { c.monthly = Some(super::monthly_fx::MonthlyEditor::new(&self.b)); }
                                 ui.horizontal(|ui| {
                                     if classic::large_button(ui, "Отмена", Vec2::new(130., 46.), false).clicked() { c.screen = None; }
                                     if classic::large_button(ui, if screen == Screen::New { "Создать бюджет" } else { "Сохранить изменения" }, Vec2::new(192., 46.), true).clicked() {
@@ -74,7 +82,7 @@ impl App {
                                                 self.switch_budget(Path::new(&path), Some(b))
                                             } else { canceled = true; Ok(()) }
                                         } else {
-                                            let mut b = self.b.clone(); b.name = c.name.trim().into(); b.base = c.currency.clone(); self.commit(b)
+                                            let mut b = self.b.clone(); b.name = c.name.trim().into(); self.commit(b)
                                         };
                                         match result { Ok(()) if !canceled => c.screen = None, Ok(()) => {}, Err(e) => c.error = e }
                                     }

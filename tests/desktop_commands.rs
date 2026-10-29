@@ -67,6 +67,7 @@ fn fresh_start_keeps_balances_and_structure_without_changing_original() {
     let c = b.categories[0].id.clone();
     b.allocate("2026-01", &c, 10_000).unwrap();
     b.put_transaction(Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),

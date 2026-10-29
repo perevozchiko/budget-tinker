@@ -33,6 +33,7 @@ fn main() {
         b.allocate(&month, &c, allocated).unwrap();
         if spent != 0 {
             b.put_transaction(Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),
@@ -69,6 +70,7 @@ fn main() {
         repeat: None,
         anchor_day: None,
         transaction: Transaction {
+            operation_fx: None,
             check_number: None,
             flag: None,
             id: id(),

@@ -19,6 +19,7 @@ fn fixture() -> (Budget, String, String, String) {
         .unwrap();
     let category = b.categories[0].id.clone();
     b.put_transaction(Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: "manual".into(),

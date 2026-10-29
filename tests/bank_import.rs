@@ -43,6 +43,7 @@ fn same_statements_preview_rules_match_reimport_approve_unmatch_and_reject() {
             reconciled: false,
             transfer: None,
             splits: vec![],
+            operation_fx: None,
             check_number: None,
             flag: None,
         })

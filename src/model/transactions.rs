@@ -39,25 +39,43 @@ impl Budget {
             t.cleared = false;
             t.base_amount = 0;
             t.snapshot = None;
+            t.operation_fx = None;
             return Ok(t);
         }
-        if let Some(old) = self.transactions.iter().find(|old| old.id == t.id) {
-            if old.reconciled {
-                return Err("Сверенную операцию нельзя изменять".into());
-            }
-            if old.amount == t.amount
-                && old.date[..7] == t.date[..7]
-                && old.account == t.account
-                && (t.amount != 0
-                    || old.splits.iter().any(|s| s.amount != 0)
-                        == t.splits.iter().any(|s| s.amount != 0))
-            {
-                t.base_amount = old.base_amount;
-                t.snapshot = old.snapshot.clone();
-                return Ok(t);
-            }
+        if let Some(old) = self.transactions.iter().find(|old| old.id == t.id)
+            && old.reconciled
+        {
+            return Err("Сверенную операцию нельзя изменять".into());
         }
-        (t.base_amount, t.snapshot) = self.transaction_value(&t)?;
+        // A fully prepared v2 posting may carry explicitly confirmed operation FX.
+        // Keep it through the editor -> command second validation pass.
+        if self.version == 2
+            && let Some(fx) = &t.operation_fx
+            && fx.validate_transaction(self, &t).is_ok()
+        {
+            return Ok(t);
+        }
+        if let Some(old) = self.transactions.iter().find(|old| old.id == t.id)
+            && old.amount == t.amount
+            && old.date[..7] == t.date[..7]
+            && old.account == t.account
+            && (t.amount != 0
+                || old.splits.iter().any(|s| s.amount != 0)
+                    == t.splits.iter().any(|s| s.amount != 0))
+        {
+            t.base_amount = old.base_amount;
+            t.snapshot = old.snapshot.clone();
+            t.operation_fx = old.operation_fx.clone();
+            self.price_posting(&mut t)?;
+            return Ok(t);
+        }
+        if let Some(old) = self.transactions.iter().find(|old| old.id == t.id)
+            && old.account == t.account
+            && self.version == 2
+        {
+            t.operation_fx = old.operation_fx.clone();
+        }
+        self.price_posting(&mut t)?;
         Ok(t)
     }
     pub fn put_transaction(&mut self, t: Transaction) -> Result<()> {
@@ -122,7 +140,8 @@ impl Budget {
                 format!("Перевод ← {}", a.name),
             ),
         ] {
-            self.transactions.push(Transaction {
+            let mut posting = Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),
@@ -139,7 +158,9 @@ impl Budget {
                 reconciled: false,
                 transfer: Some(link.clone()),
                 splits: vec![],
-            });
+            };
+            self.freeze_posting(&mut posting)?;
+            self.transactions.push(posting);
         }
         Ok(())
     }

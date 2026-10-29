@@ -17,6 +17,7 @@ fn fixture() -> (Budget, String, String) {
 }
 fn expense(account: &str, category: &str, value: i64, date: &str) -> Transaction {
     Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),
@@ -45,6 +46,8 @@ mod bank_files;
 mod categories;
 #[path = "accounting/money.rs"]
 mod money;
+#[path = "accounting/monthly_fx.rs"]
+mod monthly_fx;
 #[path = "accounting/persistence.rs"]
 mod persistence;
 #[path = "accounting/reconciliation.rs"]
@@ -55,3 +58,5 @@ mod schedules;
 mod splits;
 #[path = "accounting/transfers.rs"]
 mod transfers;
+#[path = "accounting/upgrade.rs"]
+mod upgrade;

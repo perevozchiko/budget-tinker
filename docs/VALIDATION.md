@@ -1,5 +1,147 @@
 # Validation — public preparation, 2026-10-28
 
+## Multi-currency discovery — 2026-10-29
+
+- Created local `feature/multi-currency` from clean local `master` on owner
+  instruction. No commit, push or publication was performed.
+- Inspected currency precision, monthly snapshot immutability, transaction and
+  split valuation, actual-amount transfers, budget revaluation, schedules,
+  SQLite JSON validation and UI restrictions. Added 42 owner questions in
+  MULTI-CURRENCY-QUESTIONS.md; proposed defaults remain unapproved. Application
+  code, financial behavior, document schema and dependencies are unchanged.
+- Model/integration and egui: the existing complete suite passed all **284 Rust
+  tests**. Formatting, strict all-target Clippy, example checks, release-tool
+  tests and all four dependency audits passed with the existing scoped advisory
+  exception. Logs remain under `target/multi-currency-discovery/` and
+  `target/release-audit/`.
+- Documentation-only work: no bundle rebuild or native GUI check was performed;
+  no personal budget was opened.
+- Owner follow-up: recorded one budget base currency selected in settings and
+  accounts in different currencies including the base currency. Currency lists,
+  changing an existing budget's base and valuation policies remain open. Only
+  requirements documentation changed; `git diff --check` passed. The checks
+  above precede this prose-only follow-up and were not repeated.
+
+## Multi-currency phase 0 and first Phase 1 increment — 2026-10-29
+
+- Copied the owner-provided approved v2 specification verbatim to
+  `docs/MULTI-CURRENCY-SPECIFICATION-v2.md`; both files have SHA-256
+  `1b45838c1b846b6d0bbe561c848e041d3703ac7e4c1c470092d27fa044252b05`.
+  The later owner amendment selects `1 500.00` and overrides original MC-006;
+  see MULTI-CURRENCY-AMENDMENTS.md. Linked all six phases and acceptance cases
+  in DEVELOPMENT-PLAN; retained
+  pre-existing discovery edits/questions as historical context. Audit, migration,
+  grouping findings and cache/invalidation design are recorded in
+  MULTI-CURRENCY-IMPLEMENTATION.md. No Git mutations or release actions performed.
+- **Baseline model/integration and egui:** all **284 Rust tests** passed before
+  changing application code. The new benchmark example was then run against the
+  original ten-currency model before adding TRY.
+- **Final model/integration:** **161 integration tests + 5 library tests** passed.
+  Added exact space-grouped parsing/rejection, all 11 currencies, JPY/KWD positive and
+  negative precision, amount limits, extreme checked conversion overflow,
+  symmetric rounding, all currency-pair signs and all-currency current-document
+  JSON equality. CSV/QIF/OFX/QFX regression tests accept valid grouping and reject
+  malformed grouping without changing the input budget. All prior importer,
+  schedule, persistence, transfer, split and accounting tests passed. These tests
+  cover the numeric foundation; they do not claim the future v2 FX schema,
+  migration, linked refunds or AC-12 full-feature restore already exist.
+- **Final egui/UI and binary unit tests:** **124 passed**, including existing
+  report chart/printing/reconciliation event tests updated for ISO text. A new
+  transaction-draft test verifies invalid comma input keeps payee/amount fields,
+  then space-grouped input posts exactly. Total final Rust result: **290 passed**,
+  zero failed. `cargo fmt --all --check`, strict all-target Clippy and
+  `cargo check --examples --locked` passed. Initial intermediate failures exposed
+  four old symbol/comma-decimal expectations; updated to approved MC-006 rules
+  before the successful suite; separator expectations were then updated again
+  for the owner amendment and the full suite rerun.
+- **Performance:** release example `multi_currency_baseline` measured 100
+  accounts, 100,000 synthetic rows and 240 months, initially 10 currencies and
+  then all 11. Apple M3 Pro, macOS 26.4.1, Rust 1.99.0, release opt-level 2.
+  Original month summary: 4223.601 ms; 20-year Net Worth report: 6479.905 ms.
+  Eleven-currency run: 4081.602 / 4782.229 ms respectively. SQLite save/load:
+  404.696 / 319.845 ms in the second run. These single runs are bottleneck
+  evidence, not a speedup claim or p95 guarantee. Complete timings, provisional
+  targets, correction/Undo timing surrogates and unavailable 50-custom-group
+  workload are documented in MULTI-CURRENCY-IMPLEMENTATION.md. No performance
+  optimization or full new-feature benchmark is claimed yet.
+- **Packaging:** `bash scripts/bundle.sh` passed; shared notice staging verified
+  327 dependency records. Rebuilt macOS app passed strict deep codesign
+  verification and Info.plist lint. No new graphical assets or dependencies;
+  no Windows/Linux build or GUI check performed.
+- **Live native GUI:** final space-format rebuilt executable PID 91598,
+  window 21113, fresh synthetic budget
+  `/tmp/budgettinker-space-format-nqjk6v0c/demo.budgettinker`. The startup data
+  environment was isolated before generating the demo; `lsof` confirmed that
+  database and WAL. Accessibility/CoreGraphics focused/sized the app. Inspected
+  window-only captures show space-grouped totals and ISO codes. Entering
+  `1 500.00` in Groceries saved exactly **150000** minor units (was 40000),
+  confirmed using SQLite read-only. Next-cell input `1,500.00` was rejected,
+  retained in the red-bordered editor, and left the full SQLite document
+  unchanged. Escape, leaving the editor, and native Command-Z restored the
+  **full original document**, verified read-only. Results and driver are under
+  `target/multi-currency-phase-0/space-live-*` and `verify-space-live.py`.
+  Earlier comma-format captures are intermediate only. No personal budget was
+  opened or modified; all screenshots are synthetic and stay under target.
+  No human acceptance is claimed.
+- **Release tools/dependencies:** all 14 release-tool tests and all four wrapped
+  cargo-deny checks passed, with the existing scoped advisory exception and
+  deadline guard. `scripts/audit-release.py` reported **825 source candidates,
+  327 dependency records, one error**: the already-existing `rust.yml` has push
+  triggers for master/version tags, contrary to the audit's manual-only policy.
+  Workflow files were not changed or triggered. This remains a source-release
+  audit blocker; it is separate from the successful Rust and packaging checks.
+  README's private-repository wording versus supplied public-repository claim
+  is recorded without changing visibility or assuming a remote visibility check.
+- Local evidence: `target/multi-currency-phase-0/` (baseline/final Rust logs,
+  performance logs, checks, bundle and synthetic GUI results), plus existing
+  `target/release-audit/` dependency results. Final separator checks use the
+  `space-format-*` logs; final source audit uses `source-audit-final.log`. Schema stays version 1; Phase 1 is
+  **in progress**, with frozen FX and safe backed migration explicitly next.
+
+## Phase 1 detached FX preflight and SQLite backup — 2026-10-29
+
+- Added detached operation-FX preparation and validation, plus current-document
+  and full retained-revision preflight. Copied quote/date/source and
+  MonthlyDefault provenance; retained existing native/base postings, stable
+  transaction-local split IDs, deterministic split equivalents, match originals
+  and unchanged scheduled templates. These preparation types are not yet an
+  activated v2 schema. The active app continues opening/saving version 1;
+  monthly replacement remains disabled.
+- **Model/integration:** **170 passed**, including **9 new upgrade tests**.
+  Coverage includes all 11 currencies, quote provenance, repeated preflight,
+  detached validation without monthly snapshots, JSON round-trip of individual
+  locks, exact whole-budget preservation, zero-net mixed-sign splits, trailing
+  zero parts, missing rates/references, duplicate account IDs, tampered base
+  amounts, malformed dates/rates, schedule exclusion and hidden match originals.
+  The new extreme JPY case exercises an intermediate remainder beyond i64 while
+  all four final parts fit; an unrepresentable final part returns an overflow
+  error. Normal split calculation now uses an i128 remainder, and current-store
+  validation checks representability before accepting posted splits.
+- **SQLite integration:** synthetic fresh temporary budgets only. Online backup
+  uses the enabled rusqlite `backup` feature, not filesystem copying. A test
+  asserts a nonempty live WAL, backs up current JSON, revisions and an additional
+  table, checks independent read-only reopen and revision equality, then changes
+  the source and proves recovery data remains unchanged. Other tests reject
+  missing backup directories, stale preflight and a malformed retained revision,
+  preserving the source and history. Backup verification checks integrity and
+  exact JSON/history strings before success. No schema replacement, interrupted
+  upgrade rollback, native confirmation or Undo reset is claimed in this increment.
+- **Egui/binary:** all existing **124 passed**; **5 library tests** also passed.
+  Total **299 Rust tests**, zero failed. Formatting, strict all-target Clippy and
+  example checks passed. No new GUI flow or UI change, so no bundle rebuild,
+  codesign/plist check or live GUI test was performed. No personal budget was
+  opened or modified. No performance improvement or new 100k timing is claimed.
+- **Release tools/dependencies:** all **14 release-tool tests** and all four
+  wrapped dependency checks passed with the existing scoped advisory exception.
+  Versions and inventory remain unchanged: the SQLite backup feature introduces
+  no new package. Source audit: **828 candidates, 327 dependency records, one
+  existing error** for automatic CI triggers; workflow files remain unchanged.
+- Evidence is under `target/multi-currency-upgrade/`: `tests.log`, `clippy.log`,
+  `examples.log`, `release-tools.log`, `dependencies.log`, `source-audit.log`.
+  DEVELOPMENT-PLAN and implementation notes distinguish the completed preparatory
+  work from the remaining active schema, exact-base/split overrides, confirmation,
+  atomic upgrade/rollback and history-reset work. No Git mutation or publication.
+
 ## Quick-budget menu focus fix — 2026-10-28
 
 - The egui event test presses and releases the budget-cell arrow, verifies the popup opens, selects its first item and checks that the resulting allocation is saved once.
@@ -456,3 +598,182 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Resolved the conflicts in DEVELOPMENT-PLAN.md and this log by retaining both report-filter and account/popup entries. A line-subsequence comparison against index stages 2 and 3 verified that every line from both sides remains in its original order. No application or workflow code was edited during resolution.
 - Model/integration and egui: all **284 Rust tests** passed (5 library, 123 binary/egui, 156 integration). Formatting, strict all-target Clippy and example checks passed. All **14 release-tool tests** and all four dependency audits passed with the existing scoped advisory exception.
 - No new bundle rebuild or native GUI check was performed for this documentation conflict resolution. Earlier branch-specific GUI evidence above remains historical; no combined native GUI verification is claimed. No commit, push or publication was performed.
+
+## Phase 1 explicit v2 upgrade and active operation FX — 2026-10-29
+
+- Added explicit Budget Properties → Upgrade currency data confirmation. Cancel
+  and Escape preserve document/history and create no recovery directory. Success
+  activates v2 only after verified online backup and atomic replacement of the
+  current JSON plus every retained revision. Startup/new-budget creation still
+  writes v1 until that file is explicitly upgraded. Ordinary save rejects schema
+  transitions and v2 base-currency changes. Existing v1 legacy replacement/Undo
+  remains compatible; v1 replacement into v2 is rejected pending Phase 5.
+- V2 operations and hidden matched originals persist independently validated FX
+  locks. Readers use copied quotes/base sums, including stable split identities
+  carried through the editor. New posting/starting-balance/transfer/schedule and
+  split-peer paths create or retain locks. Exact-base/split-base command validation
+  is atomic and preserves overrides during metadata edits; the manual FX editor
+  controls and monthly-rate editing remain outstanding. The properties base
+  selector is creation-only; its format example uses space grouping and ISO code.
+- **Model/integration:** **176 integration + 5 library tests passed**. New coverage
+  verifies activation/reopen, JSON equality, every retained version, preserved
+  balances/category activity, exact backup contents, copied FX independence from
+  changed/removed monthly quotes, hidden originals/Unmatch, exact-base/split
+  overrides, preserved split identity after deletion, new accounts/transfers and
+  schedule posting. Corrupt locks, stale preflight, backup failure, downgrade and
+  base changes are rejected. SQLite triggers inject both ABORT and ignored
+  revision updates after the document update; all document/history writes roll
+  back together, recovery copies remain usable, and reopening sees v1.
+- **Egui/UI and binary:** **126 tests passed**, including two new pointer-event
+  upgrade tests. They enter through properties, cancel, press Escape, confirm,
+  verify exact recovery data and SQLite state, clear both populated Undo/Redo
+  stacks, and exercise ordinary commit/Undo/Redo after activation. A stale source
+  leaves in-memory data and both history stacks unchanged. Total final Rust
+  result: **307 passed**, zero failed. The first full run exposed five v1 legacy
+  replacement regressions from an over-broad storage base lock; the guard was
+  restricted to v2, preserving v1 replacement, and the full suite rerun successfully.
+- Required formatting, strict all-target Clippy and example checks passed on the
+  final code. All **14 release-tool tests** and all four wrapped dependency audits
+  passed, retaining only the approved font-stack exception and its deadline guard.
+  Source audit reports **829 source candidates / 327 dependency records / 1
+  error**: the pre-existing non-manual CI push triggers. No workflow was changed
+  or triggered; no full source-release audit pass is claimed.
+- **Packaging:** rebuilt macOS ARM64 bundle with the final code; notice staging
+  verified all 327 records. Strict deep codesign verification and Info.plist lint
+  passed. No new assets or dependencies, no Windows/Linux validation.
+- **Live native GUI:** LaunchServices-launched PID **35055**, window **21261**,
+  fresh isolated synthetic budget
+  `/var/folders/zw/f8bg791d14z0yj4hhkq566ch0000gn/T/budgettinker-upgrade-live-rgqzrrzl/demo.budgettinker`.
+  Added synthetic USD split and zero-net mixed-sign rows plus two retained
+  revisions before launch. Accessibility/CoreGraphics entered properties and the
+  confirmation, canceled with complete SQLite equality and no backup, reopened,
+  then confirmed upgrade of **13 operations / 2 revisions**. Read-only SQLite
+  verified every original field and every retained ID/timestamp after stripping
+  only v2 lock/identity metadata; the recovery copy equals the complete original
+  current document and history. Frozen split bases are `[-1, -1, -1]` and
+  `[-5, 3, 2]` minor units respectively. Inspected properties, confirmation and
+  success captures; the success dialog identifies the usable recovery file.
+  Native Command-Z did not revert the schema or change the upgraded document.
+  Undo-stack population/reset itself was verified in egui above.
+- **Live reopen:** restarted the same rebuilt bundle on that isolated upgraded
+  file: PID **38345**, window **21285**. Inspected the reopened budget; read-only
+  full-document equality with the upgraded result passed. `lsof` confirms only the
+  intended synthetic database/WAL. Live mutation of quotes/exact-base entries and
+  simulated storage failures are model/integration evidence, not claimed native
+  interaction coverage. No personal budget was opened or modified; no human
+  acceptance, commit, push or publication was performed.
+- Evidence remains under `target/multi-currency-activation/`: final `*-verified`
+  and `*-final` Rust/build logs, dependency/release/source audits, native scripts,
+  read-only comparisons, synthetic screenshots and process/database metadata.
+  Phase 1 remains in progress: creation/account currency controls, inline missing
+  rates, explicit lookup acceptance and monthly valuation lifecycle are next.
+
+
+## Phase 1 operation FX editor — 2026-10-29
+
+- Added v2 ordinary foreign-operation FX fields: canonical base-per-account quote,
+  quote date, exact signed base amount and exact signed split base parts. Current
+  monthly or latest earlier quotes may be explicitly selected; older suggestions
+  are labeled Stale. Manual edits retain Manual provenance; posting does not
+  create or edit monthly valuation quotes. Exact-base-only input derives a
+  reference using integer arithmetic while preserving the entered base amount.
+- **Model/integration:** **178 integration + 5 library tests passed**. Two new
+  integration tests cover no-monthly-quote posting, preserving confirmed FX through
+  repeated command validation, native balance, exact split sums, malformed rates,
+  unchanged input on rejection, metadata edits, SQLite save/load and full-document
+  validation. Existing migration, historical revision, transfer, import, schedule
+  and split regressions pass.
+- **Egui/UI and binary:** **130 tests passed**, four more than before this increment.
+  Pointer events enable FX, type an invalid comma rate and select exact base mode;
+  the draft retains invalid text/payee and subsequently posts valid fixed-point FX.
+  Split tests reject a one-cent mismatch and preserve IDs/base entries on reopen.
+  An earlier suggestion is visibly labeled Stale, stays unselected until explicit
+  selection and does not allow silent posting. Another UI-state test verifies
+  complete-document SQLite commit/Undo/Redo and injected save failure preserving
+  the in-memory document, persisted document and both history stacks.
+  Total Rust result: **313 passed**, zero failed.
+- Required formatting, strict all-target Clippy and example checks passed.
+  Initial compile checks exposed a new helper visibility/import error; these were
+  fixed before the successful suite. Strict Clippy then identified two collapsible
+  conditions; both were corrected without changing behavior. All **14 release-tool
+  tests** and all four wrapped dependency audits passed, preserving the scoped
+  font-stack exception and deadline guard. No new assets or dependencies.
+- **Packaging:** rebuilt final macOS ARM64 bundle, staged all 327 notice records,
+  verified strict deep codesign and Info.plist lint. Windows/Linux remain untested.
+- **Live native GUI:** final rebuilt bundle, initially PID **57839**, window
+  **21331**, opened freshly generated synthetic v2 fixture
+  `/var/folders/zw/f8bg791d14z0yj4hhkq566ch0000gn/T/budgettinker-fx-editor-lbuv0f4p/demo.budgettinker`.
+  Accessibility/CoreGraphics selected the empty RSD account and opened a new row.
+  Missing monthly quote blocked Save without changing the complete SQLite
+  document. Entering `0,00855` in FX showed an error and retained the draft.
+  Replacing it with `0.00855000` and entering exact `-10.09 EUR` saved actual
+  `-1 180.00 RSD` as **-118000 native / -1009 base minor units**, with the copied
+  manual rate **855000**, exact-base flag and payee intact. Read-only SQLite
+  verified all other document fields remained identical and no monthly quote was
+  created. Native Undo restored the complete original document; Redo restored
+  the complete posted document. Inspected missing/invalid/confirmed/saved captures.
+- **Live reopen:** restarted the same final bundle, PID **60980**, window **21354**;
+  read-only SQLite integrity check and complete equality to the posted result
+  passed. Inspected the reopened budget: missing monthly valuation is unavailable,
+  while the native RSD balance persists. `lsof` confirms the isolated database/WAL.
+  Native split editing, exact-base-only input, stale selection and save failures
+  are automated evidence above, not claimed native interaction coverage.
+- Evidence: `target/multi-currency-editor/` contains tests/checks, dependency and
+  release-tool logs, bundle/signature/plist logs, native drivers, synthetic captures,
+  read-only comparisons and process/database metadata. No personal budgets were
+  opened or modified; no Git mutation, workflow trigger or publication occurred.
+  Phase 1 remains in progress; monthly lifecycle/corrections, currency creation
+  controls, reciprocal quote entry and explicit optional lookup acceptance remain.
+- Final source audit: **832 source candidates / 327 dependency records / 1 error**,
+  the existing CI push triggers conflicting with the manual-only policy. Workflow
+  files were not changed or triggered; a full source-release audit pass is not claimed.
+  Final evidence uses `tests-verified.log`, `clippy-final.log`, `fmt-final.log`,
+  `examples.log`, `bundle-final.log`, `codesign-final.log` and `plist-final.log`.
+
+## Phase 1 monthly FX lifecycle command foundation — 2026-10-29
+
+- Added v2 current-month quote replacement, explicit finalization after month
+  end, Incomplete/Provisional/Finalized valuation status and independently
+  persisted lifecycle/audit metadata with serde defaults. Existing upgraded
+  months remain unfinalized until explicitly finalized. Past-month entry or
+  replacement uses an opaque correction proposal with a reason and prior/new
+  quote metadata. A changed document invalidates the proposal; posting locks,
+  native balances and category flows remain untouched.
+- Correction proposals show before/after all-account Net Worth, on-budget stock,
+  Available and frozen-flow residual revaluation for the selected and following
+  months. Missing comparison quotes remain unavailable. Separate account previews
+  may use an earlier quote with its month/date and Estimated flag; neither those
+  previews nor missing quotes become authoritative totals. Zero exposure requires
+  no quote. Net Worth accumulation now checks the combined i128 total before
+  returning i64; an overflowing correction proposal fails without mutation.
+- **Model/integration:** **185 integration + 5 library tests passed**. Seven new
+  integration tests cover exact selected/adjacent-period residuals, frozen posting
+  and category equality, current-month edits, explicit finalization, missing and
+  earlier/future quote boundaries, unavailable previews, zero exposure, stale
+  approval, legacy guards/defaults, invalid quotes/audit/finalization timestamps,
+  preserving legacy empty source text, SQLite reopen, separate off-budget debt
+  and on-budget asset effects, and combined valuation overflow rejection.
+- **Egui/UI and binary:** **131 tests passed**. The new App-state test exercises
+  correction and finalization as individual commits, complete-document SQLite
+  Undo/Redo (including audit and lifecycle state), and a trigger-injected save
+  failure preserving memory, stored document and both history stacks. This is
+  App-state coverage, not pointer-event coverage of new monthly controls. Total
+  final Rust result: **321 passed**, zero failed.
+  The final future-quote exclusion assertion was then checked by rerunning all
+  seven monthly lifecycle integration tests; formatting, Clippy and examples
+  passed again (`targeted-final.log`).
+- Formatting, strict all-target Clippy and example checks passed. All **14
+  release-tool tests** and all four wrapped dependency audits passed with the
+  existing approved font-stack exception/deadline. The source audit reports
+  **834 source candidates / 327 dependency records / 1 error**: existing CI push
+  triggers violate the manual-only policy. No workflow was changed or triggered.
+- **Native GUI/packaging:** not run for this model/command/storage increment;
+  product widgets and package configuration are unchanged. No new assets or
+  dependencies. Monthly editor/confirmation controls, report status badges,
+  lookup acceptance, transit exposure and the full Phase 4 classification/bridge
+  presentation remain outstanding. No live acceptance or completion of
+  AC-09/AC-16 is claimed; the existing Income display is not replaced here.
+- Evidence: `target/monthly-fx-lifecycle/tests-final.log`, `fmt-final.log`,
+  `clippy-final.log`, `examples-final.log`, `dependencies.log`, `release-tools.log`
+  and `source-audit.log`. Tests use fresh synthetic temporary stores. No personal
+  budget was opened or modified; no Git mutation, publication or release occurred.

@@ -39,6 +39,7 @@ fn transaction(v: &Value) -> Transaction {
         category: (text(v, "categoryId") == "bank-coffee").then(|| "bank-coffee".into()),
         income_month: None,
         flag: None,
+        operation_fx: None,
         check_number: v["checkNumber"].as_str().map(str::to_owned),
         cleared: text(v, "cleared") != "Uncleared",
         reconciled: text(v, "cleared") == "Reconciled",

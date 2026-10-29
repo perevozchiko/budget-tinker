@@ -14,6 +14,7 @@ fn fixture() -> (Budget, String) {
 }
 fn income(account: &str, date: &str, assigned: Option<&str>, amount: i64) -> Transaction {
     Transaction {
+        operation_fx: None,
         check_number: None,
         flag: None,
         id: id(),

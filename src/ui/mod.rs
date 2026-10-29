@@ -302,6 +302,9 @@ mod credit_tests;
 #[cfg(test)]
 #[path = "tests/legacy_import.rs"]
 mod legacy_import_tests;
+#[cfg(test)]
+#[path = "tests/operation_fx.rs"]
+mod operation_fx_tests;
 
 fn repeat_combo(ui: &mut egui::Ui, id: &str, value: &mut String) {
     egui::ComboBox::from_id_salt(id)

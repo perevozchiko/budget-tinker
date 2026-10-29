@@ -28,6 +28,7 @@ impl Draft {
             complete_payee: false,
             completed_account: String::new(),
             automatic_amount: None,
+            fx: FxDraft::default(),
         };
         if let Some(id) = transaction {
             let t = b
@@ -253,6 +254,7 @@ impl Draft {
                     SplitTransfer { link, account }
                 });
                 Ok(Split {
+                    id: details.id,
                     category: (!c.is_empty()).then(|| c.clone()),
                     amount: amount(v, &a.currency)?,
                     income_month: if c.is_empty() && valid_date(&self.date) {
@@ -270,6 +272,7 @@ impl Draft {
             })
             .collect::<Result<Vec<_>>>()?;
         let t = Transaction {
+            operation_fx: None,
             check_number: self
                 .id
                 .as_ref()
@@ -321,6 +324,8 @@ impl Draft {
         };
         if scheduled {
             b.prepare_scheduled_transaction(t)
+        } else if self.fx.enabled {
+            self.prepare_fx(b, t)
         } else {
             b.prepare_transaction(t)
         }

@@ -1,6 +1,51 @@
 use super::*;
 
 #[test]
+fn grouped_import_amounts_are_validated_before_posting() {
+    let (b, account, _) = fixture();
+    let before = serde_json::to_value(&b).unwrap();
+    for extension in ["csv", "qif", "ofx", "qfx"] {
+        let path = temp(extension);
+        for (input, valid) in [
+            ("-1,234.56", true),
+            ("-1,234", true),
+            ("-1 234.56", true),
+            ("-1 234", true),
+            ("-1,23", false),
+            ("-12,34.56", false),
+            ("-12 34.56", false),
+            ("-1,234 567.89", false),
+        ] {
+            let source = match extension {
+                "csv" => format!("Date,Payee,Amount\n2026-01-20,Synthetic,\"{input}\"\n"),
+                "qif" => format!("!Type:Bank\nD01/20/2026\nT{input}\nPSynthetic\n^\n"),
+                _ => format!(
+                    "<OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>EUR<BANKTRANLIST><STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20260120<TRNAMT>{input}<FITID>synthetic<NAME>Synthetic</STMTTRN></BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>"
+                ),
+            };
+            std::fs::write(&path, source).unwrap();
+            let result = budgettinker::bank::import(&b, &path, &account);
+            if valid {
+                let (next, count) = result.unwrap();
+                assert_eq!(count, 1);
+                assert_eq!(
+                    next.transactions.last().unwrap().amount,
+                    if input.contains('.') {
+                        -123456
+                    } else {
+                        -123400
+                    }
+                );
+            } else {
+                assert!(result.is_err(), "{extension}: {input}");
+            }
+            assert_eq!(serde_json::to_value(&b).unwrap(), before);
+        }
+        std::fs::remove_file(path).unwrap();
+    }
+}
+
+#[test]
 fn csv_legacy_import_duplicate_detection_and_atomic_failure() {
     let (b, eur, _) = fixture();
     let path = temp("csv");

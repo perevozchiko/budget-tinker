@@ -31,7 +31,8 @@ impl Budget {
             }
             let (base_amount, snapshot) =
                 self.to_base(balance, &account.currency, &current_month())?;
-            next.transactions.push(Transaction {
+            let mut posting = Transaction {
+                operation_fx: None,
                 check_number: None,
                 flag: None,
                 id: id(),
@@ -48,7 +49,9 @@ impl Budget {
                 reconciled: false,
                 transfer: None,
                 splits: vec![],
-            });
+            };
+            next.freeze_posting(&mut posting)?;
+            next.transactions.push(posting);
         }
         Ok(next)
     }
@@ -98,6 +101,7 @@ impl Budget {
             default_overspending_rule: OverspendingRule::AvailableToBudget,
             overspending_rules: BTreeMap::new(),
             snapshots: vec![],
+            monthly_fx: MonthlyFxState::default(),
             scheduled: vec![],
             payee_rules: BTreeMap::new(),
             notes: BTreeMap::new(),

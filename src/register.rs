@@ -567,6 +567,7 @@ impl Budget {
                     t.set_date(date.clone());
                     t.cleared = false;
                     t.reconciled = false;
+                    t.operation_fx = None;
                     t.snapshot = None;
                     t.base_amount = 0;
                     let anchor = NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap().day();
@@ -635,6 +636,7 @@ impl Budget {
             let (base, snapshot) = self.transaction_value(&t)?;
             t.base_amount = base;
             t.snapshot = snapshot;
+            self.freeze_posting(&mut t)?;
             self.transactions.push(t);
             let anchor = s.anchor_day.unwrap_or(
                 NaiveDate::parse_from_str(&s.next_date, "%Y-%m-%d")

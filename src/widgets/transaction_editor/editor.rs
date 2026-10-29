@@ -482,6 +482,12 @@ impl Draft {
         if let Some(i) = remove {
             self.splits.remove(i);
             self.split_details.remove(i);
+            if i < self.fx.parts.len() {
+                self.fx.parts.remove(i);
+            }
+        }
+        if !scheduled && self.transfer_to.is_none() {
+            self.show_fx(ui, b);
         }
         if !self.error.is_empty() {
             ui.add(

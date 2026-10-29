@@ -63,6 +63,7 @@ pub(super) fn transaction(
             category: None,
             cleared: false,
             reconciled: false,
+            operation_fx: None,
             check_number: optional(v, "checkNumber")?
                 .filter(|s| !s.is_empty())
                 .map(str::to_owned),
@@ -135,6 +136,7 @@ pub(super) fn transaction(
                         account,
                     });
                     t.splits.push(Split {
+                        id: String::new(),
                         category,
                         income_month,
                         payee,

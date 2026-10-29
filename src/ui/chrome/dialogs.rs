@@ -24,6 +24,7 @@ impl App {
             Overlay::Technical => "Техническая информация",
             Overlay::Help(_) => "Справка BudgetTinker",
             Overlay::SavedVersion => "Версия сохранена",
+            Overlay::Upgraded(_) => "Currency data upgraded",
             Overlay::LoadVersion(_) => "Загрузить другую версию",
         };
         let mut close = false;
@@ -115,6 +116,7 @@ impl App {
                         ui.l_label(RichText::new(heading).font(crate::palette::bold(18.)).color(GREEN));
                         ui.add_space(10.); ui.l_label(content);
                     }
+                    Overlay::Upgraded(path) => { ui.label("The upgrade is complete. Undo and Redo history has been cleared."); ui.label(format!("Recovery copy: {path}")); ui.label("To recover the original budget, open that file through File → Open Budget."); }
                     Overlay::SavedVersion => { ui.l_label("Версия бюджета сохранена. Её можно открыть через Файл → Загрузить другую версию."); }
                     Overlay::LoadVersion(_) => { ui.l_label("Загрузить выбранную версию бюджета? Текущее состояние будет сохранено в истории. Загрузку можно отменить через Правка → Отменить."); }
                 }
