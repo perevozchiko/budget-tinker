@@ -1,5 +1,7 @@
 use super::*;
 
+mod account_settings;
+
 const ACCOUNT_TYPES: &[(&str, &str)] = &[
     ("checking", "Текущий счёт"),
     ("savings", "Сберегательный счёт"),
@@ -268,6 +270,10 @@ fn popup_pointer(ctx: &egui::Context, pos: egui::Pos2, color: Color32) {
 
 impl App {
     pub(super) fn detail_form(&mut self, ctx: &egui::Context, mut d: Dialog) {
+        if matches!(d.kind, DialogKind::AccountSettings(_)) {
+            self.account_settings_form(ctx, d);
+            return;
+        }
         if matches!(d.kind, DialogKind::Note(_)) {
             self.note_form(ctx, d);
             return;
@@ -306,7 +312,6 @@ impl App {
         let mut save = false;
         let mut cancel = false;
         let mut visibility_action = false;
-        let mut next = None;
         let mut pointer = None;
         let mut modal = chrome::modal(ctx, "dialog");
         if compact {
@@ -338,36 +343,6 @@ impl App {
             detail_body(ui, width, compact, |ui| {
                 ui.spacing_mut().item_spacing.y = if compact { 6. } else { 9. };
                 match &d.kind {
-                    DialogKind::AccountSettings(a) => {
-                        let account = self.b.account(a).expect("existing account");
-                        ui.l_label(RichText::new("Название:").strong());
-                        first_field(ui, &mut d.fields[0], &mut d.focus, width - 56.);
-                        ui.l_label("Заметка:");
-                        ui.add(egui::TextEdit::multiline(&mut d.fields[2]).desired_width(width - 56.).desired_rows(3));
-                        ui.l_label("Тип:");
-                        account_type(ui, &mut d.fields[1], 330.);
-                        ui.add_space(4.);
-                        ui.separator();
-                        ui.l_checkbox(&mut d.second, "Включать в бюджет");
-                        if d.second != account.on_budget {
-                            ui.l_label(RichText::new("Изменение учёта счёта пересчитает бюджет и расходы по всей его истории.").size(12.).color(RED));
-                        }
-                        let balance = self.b.balance(a, None, false);
-                        ui.horizontal(|ui| {
-                            ui.l_label("Текущий остаток:");
-                            ui.label(RichText::new(i18n::money(balance, &account.currency)).strong());
-                        });
-                        if ui.add_enabled(!account.closed, classic::Button::new("Скорректировать остаток…")).clicked() {
-                            next = Some(DialogKind::AdjustBalance(a.clone()));
-                        }
-                        ui.separator();
-                        ui.add_enabled_ui(account.closed || balance == 0, |ui| {
-                            ui.l_checkbox(&mut d.check, "Закрыть счёт с нулевым остатком");
-                        });
-                        if !account.closed && balance != 0 {
-                            ui.l_label(RichText::new("Для закрытия счёта его остаток должен быть нулевым").size(11.).color(Color32::GRAY));
-                        }
-                    }
                     DialogKind::Reconcile(a) => {
                         let account = self.b.account(a).expect("existing account");
                         ui.l_label("Enter the balance from your account website or paper statement to begin reconciling.");
@@ -498,11 +473,6 @@ impl App {
         }
         if cancel || response.should_close() {
             self.dialog = d.parent.map(|parent| *parent);
-            return;
-        }
-        if let Some(next) = next {
-            self.open(next);
-            self.dialog.as_mut().expect("new dialog").parent = Some(Box::new(d));
             return;
         }
         if save {

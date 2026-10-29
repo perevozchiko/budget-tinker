@@ -1,7 +1,8 @@
-//! sRGB values sampled from the reference after converting its Display ICC profile.
+//! Application colors in sRGB.
 use eframe::egui::{self, Color32, FontId, Rect, Vec2};
 pub const SIDEBAR: Color32 = Color32::from_rgb(0, 150, 198);
 pub const SELECTED: Color32 = Color32::from_rgb(0, 72, 109);
+pub const ACCOUNT_HOVER: Color32 = Color32::from_rgb(0, 112, 151);
 pub const CARD_TOP: Color32 = Color32::from_rgb(66, 81, 89);
 pub const CARD_BOTTOM: Color32 = Color32::from_rgb(59, 69, 78);
 pub const ROW: Color32 = Color32::from_rgb(234, 245, 251);

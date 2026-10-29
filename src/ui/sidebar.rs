@@ -13,7 +13,8 @@ impl App {
         let category_popup = self.dialog.as_ref().is_some_and(|d| {
             matches!(
                 d.kind,
-                DialogKind::Category
+                DialogKind::AccountSettings(_)
+                    | DialogKind::Category
                     | DialogKind::NewGroup
                     | DialogKind::EditCategory(_)
                     | DialogKind::EditGroup(_)
@@ -326,16 +327,19 @@ impl App {
                                             Color32::from_rgba_unmultiplied(0, 49, 85, 210),
                                         );
                                     }
-                                    if self.page == Page::Accounts
-                                        && self.account.as_ref() == Some(&account.id)
-                                    {
-                                        painter.rect_filled(
-                                            row.expand2(Vec2::new(8., 0.)),
-                                            0.,
-                                            crate::palette::SELECTED,
-                                        );
-                                    } else if response.hovered() {
-                                        painter.rect_filled(row, 2., Color32::from_white_alpha(13));
+                                    let editing = self.dialog.as_ref().is_some_and(|dialog| {
+                                        matches!(&dialog.kind, DialogKind::AccountSettings(id) if id == &account.id)
+                                            || dialog.parent.as_ref().is_some_and(|parent| matches!(&parent.kind, DialogKind::AccountSettings(id) if id == &account.id))
+                                    });
+                                    let highlight = if editing || response.hovered() {
+                                        Some(crate::palette::ACCOUNT_HOVER)
+                                    } else if self.page == Page::Accounts && self.account.as_ref() == Some(&account.id) {
+                                        Some(crate::palette::SELECTED)
+                                    } else {
+                                        None
+                                    };
+                                    if let Some(color) = highlight {
+                                        painter.rect_filled(row.expand2(Vec2::new(8., 0.)), 0., color);
                                     }
                                     let balance = self.b.balance(&account.id, None, false);
                                     let amount = if account.currency == self.b.base {
@@ -386,7 +390,10 @@ impl App {
                                         self.selected.clear();
                                     }
                                     if response.secondary_clicked() {
-                                        self.open(DialogKind::AccountSettings(account.id.clone()));
+                                        self.open_at(
+                                            DialogKind::AccountSettings(account.id.clone()),
+                                            row,
+                                        );
                                     }
                                 }
                             }

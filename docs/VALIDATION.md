@@ -357,3 +357,22 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Rebuilt the macOS bundle with the updated attribution. Packaged attribution matches
   the source; strict ad-hoc signature and plist checks passed. No additional live GUI
   check was performed for this documentation-only update.
+
+## Account edit popup and sidebar highlights — 2026-10-29
+
+- Work is on `fix/account-edit-dialog`, created from local `master` with a clean working tree. No commit, push or publication was performed.
+- Right-click opens a 374px account popup below the corresponding row without a dimmed backdrop. Name and Note use bordered inset fields; Type is aligned with them. Adjust Balance keeps the parent draft, budget membership changes in the draft, and the footer offers Close/Reopen Account, Cancel and a green Done button. Existing account validation, persistence and Undo/Redo remain in use.
+- Hovering or editing an account uses a lighter blue (RGB 0/112/151), distinct from the selected register account (RGB 0/72/109). The edit highlight persists after the pointer leaves the row, including while the balance-adjustment child dialog is open.
+- Model/integration: the complete suite passed **280 Rust tests** (5 library, 119 binary/egui, 156 integration). Existing financial and persistence suites pass. No money, transfer or stored schema implementation changed.
+- Egui: five new tests exercise real pointer events for hover, right-click opening, both simultaneous highlight colors, popup/footer geometry, budget toggling, Cancel, Done, Close/Reopen and opening the balance-adjustment child. They verify draft preservation, rejecting nonzero account closure without data/Undo changes, saving name/type/note/membership in one change, SQLite persistence and complete-document Undo/Redo. Escape from the child returns to the unsaved account draft.
+- Formatting, strict all-target Clippy and example checks passed. All four dependency audits passed with the existing scoped advisory exception; all **11 release-tool tests** passed.
+- Native GUI: the macOS ARM64 bundle was rebuilt; strict ad-hoc signature and Info.plist checks passed. Final PID **49541**, window **19807**, opened fresh synthetic `/tmp/budgettinker-account-colors-3039gcut/demo.budgettinker`, confirmed by lsof. Selected Checking in the register, then right-clicked Cash. Visually inspected the anchored popup, field borders and distinct dark Checking/lighter Cash highlights. A read-only SQLite comparison confirmed the complete stored document was unchanged after navigation and opening the popup. Final synthetic capture: `target/account-dialog/final-colors.png`; logs and test captures stay under target/.
+- Live edit/save/Undo and balance-adjustment acceptance are not claimed; account mutation and Undo/Redo were verified through egui events and SQLite above. An earlier scripted native edit sequence did not reach its expected save and was not accepted as evidence. No external application screenshot or personal budget was added to the source tree.
+
+## Documentation wording cleanup — 2026-10-29
+
+- Icon-edit notes describe the requested colors, texture and geometry directly. The palette module documents its color space. Project asset provenance, artwork terms, dependency attribution and upstream license texts are retained.
+- Product documentation was searched for external-product names and visual-development wording. Import compatibility details and data-safety instructions remain intact.
+- The account-popup implementation and checks recorded above are included in the same branch. This follow-up changes prose and a Rust module comment; no additional UI or data behavior changed.
+
+- Final follow-up checks: all 280 Rust tests, formatting, strict Clippy, examples, all four dependency audits and 11 release-tool tests passed. The bundle was rebuilt after the documentation cleanup; strict signature and plist checks passed. Fresh launch PID **60772** uses `/tmp/budgettinker-fresh-8vd5lcse/demo.budgettinker`; no additional editing workflow was exercised during this launch.

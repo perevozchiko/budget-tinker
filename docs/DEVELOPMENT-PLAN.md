@@ -71,3 +71,13 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 - [ ] Inspect the final account drag offset live and verify animation and persistence with dedicated egui interaction coverage.
 
 - [x] Restrict account drop targets to the visible scroll clip and remove legacy brand references from project documentation.
+
+## Account edit popup — 2026-10-29
+
+- [x] Replace the centered account-properties form with a compact popup anchored to the account row, with aligned Name/Note/Type fields, balance and budget-membership buttons, and Close Account/Cancel/Done footer actions.
+- [x] Keep the edited account highlighted; distinguish the lighter hover/edit highlight from the darker selected register account.
+- [x] Verify popup actions and SQLite Undo/Redo with egui events; rebuild and visually inspect the macOS bundle using fresh synthetic data.
+
+## Documentation wording — 2026-10-29
+
+- [x] Describe icon adjustments and the application palette directly while retaining asset provenance and licensing records.
