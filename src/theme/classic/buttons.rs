@@ -6,7 +6,6 @@ pub enum Glyph {
     Transfer,
     Import,
     Check,
-    Cancel,
 }
 pub struct Button {
     label: WidgetText,
@@ -16,7 +15,6 @@ pub struct Button {
     icon: Option<Glyph>,
     selected: bool,
     primary: bool,
-    success: bool,
 }
 impl Button {
     pub fn new(label: impl Into<WidgetText>) -> Self {
@@ -28,7 +26,6 @@ impl Button {
             icon: None,
             selected: false,
             primary: false,
-            success: false,
         }
     }
     pub fn small(mut self) -> Self {
@@ -47,14 +44,10 @@ impl Button {
         self.primary = true;
         self
     }
-    pub fn success(mut self) -> Self {
-        self.success = true;
-        self
-    }
 }
 impl Widget for Button {
     fn ui(self, ui: &mut Ui) -> Response {
-        let color = if (self.primary || self.success) && ui.is_enabled() {
+        let color = if self.primary && ui.is_enabled() {
             Color32::WHITE
         } else if ui.is_enabled() {
             TEXT
@@ -76,24 +69,7 @@ impl Widget for Button {
         });
         if ui.is_rect_visible(rect) {
             let pressed = response.is_pointer_button_down_on() || self.selected;
-            let (top, bottom) = if self.success && ui.is_enabled() {
-                if pressed {
-                    (
-                        Color32::from_rgb(49, 120, 0),
-                        Color32::from_rgb(113, 170, 44),
-                    )
-                } else if response.hovered() {
-                    (
-                        Color32::from_rgb(176, 218, 107),
-                        Color32::from_rgb(65, 148, 0),
-                    )
-                } else {
-                    (
-                        Color32::from_rgb(148, 204, 69),
-                        Color32::from_rgb(55, 135, 0),
-                    )
-                }
-            } else if self.primary && ui.is_enabled() {
+            let (top, bottom) = if self.primary && ui.is_enabled() {
                 if pressed {
                     (
                         Color32::from_rgb(0, 82, 119),
@@ -156,13 +132,6 @@ impl Widget for Button {
                 );
                 match icon {
                     Glyph::Import => {}
-                    Glyph::Cancel => gradient(
-                        ui.painter(),
-                        tile,
-                        2.,
-                        Color32::from_rgb(242, 83, 79),
-                        Color32::from_rgb(172, 0, 0),
-                    ),
                     _ => gradient(
                         ui.painter(),
                         tile,
@@ -220,14 +189,6 @@ impl Widget for Button {
                             ],
                             Stroke::new(2_f32, c),
                         ));
-                    }
-                    Glyph::Cancel => {
-                        for diagonal in [
-                            [center - Vec2::new(4., 4.), center + Vec2::new(4., 4.)],
-                            [center - Vec2::new(4., -4.), center + Vec2::new(4., -4.)],
-                        ] {
-                            p.line_segment(diagonal, Stroke::new(2_f32, c));
-                        }
                     }
                 }
             }

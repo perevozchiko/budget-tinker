@@ -80,3 +80,22 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 - [x] Remember each report's filters independently in budget-local preferences, retaining compatibility with existing saved choices.
 - [x] Verify report interactions, persistence and unchanged budget data in egui and the rebuilt macOS application.
 - [x] Highlight enabled report filter links immediately on hover as well as while their panel is open.
+
+## Account edit popup — 2026-10-29
+
+- [x] Replace the centered account-properties form with a compact popup anchored to the account row, with aligned Name/Note/Type fields, balance and budget-membership buttons, and Close Account/Cancel/Done footer actions.
+- [x] Keep the selected register account dark even when hovered or edited; use a slightly lighter highlight for other hovered/edited accounts.
+- [x] Verify popup actions and SQLite Undo/Redo with egui events; rebuild and visually inspect the macOS bundle using fresh synthetic data.
+
+## Documentation wording — 2026-10-29
+
+- [x] Describe icon adjustments and the application palette directly while retaining asset provenance and licensing records.
+
+## Popup chrome follow-up — 2026-10-29
+
+- [x] Share rounded, seamless pointer rendering across anchored account/category/group/note dialogs, hidden categories and the register timeframe popup.
+- [x] Give category/group/note dialogs consistent 60×27 Cancel/Done buttons, smaller control text and matching alignment; retain account-specific green Done styling.
+
+## Merge conflict resolution — 2026-10-29
+
+- [x] Preserve both report-filter and account/popup documentation during the merge from master; verify the combined Rust code, release tools and dependency policy.

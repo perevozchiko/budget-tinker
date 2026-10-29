@@ -30,6 +30,7 @@ package = load('package-source')
 artifact_names = load('ci-artifact-name')
 release_version = load('release-version')
 bump_version = load('bump-version')
+next_release = load('next-release-version')
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -151,8 +152,69 @@ class ReleasePolicyTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 bump_version.update_version(root, 'invalid version')
 
+    def test_generated_release_notes_categories(self):
+        config = (ROOT / '.github/release.yml').read_text(encoding='utf-8')
+        self.assertTrue(config.startswith('changelog:\n') or 'changelog:\n' in config)
+        self.assertIn('  exclude:\n', config)
+        self.assertIn('      - skip-changelog\n', config)
+        self.assertIn('      - no-release-notes\n', config)
+        for category in (
+            'Breaking Changes', 'New Features', 'Bug Fixes', 'Improvements',
+            'Documentation', 'Maintenance & CI', 'Other Changes',
+        ):
+            self.assertIn(category, config)
+        for label in ('breaking-change', 'feature', 'enhancement', 'bug',
+                      'improvement', 'performance', 'documentation', 'ci',
+                      'dependencies'):
+            self.assertIn(f'        - {label}\n', config)
+        self.assertIn('    - title: "Other Changes"\n      labels:\n        - "*"\n', config)
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertIn('--generate-notes', workflow)
+
+    def test_one_click_release_version_selection(self):
+        tags = ['v0.1.0-alpha.1', 'v0.1.0-alpha.2', 'v0.1.0-alpha.3']
+        choose = next_release.next_version
+        self.assertEqual(choose('0.1.0-alpha.3', 'current', 'alpha', tags), '0.1.0-alpha.4')
+        self.assertEqual(choose('0.1.0-alpha.3', 'current', 'beta', tags), '0.1.0-beta.1')
+        self.assertEqual(choose('0.1.0-alpha.3', 'current', 'rc', tags), '0.1.0-rc.1')
+        self.assertEqual(choose('0.1.0-alpha.3', 'current', 'stable', tags), '0.1.0')
+        self.assertEqual(choose('0.1.0-alpha.3', 'patch', 'alpha', tags), '0.1.1-alpha.1')
+        self.assertEqual(choose('0.1.0-alpha.3', 'minor', 'alpha', tags), '0.2.0-alpha.1')
+        self.assertEqual(choose('0.1.0-alpha.3', 'major', 'stable', tags), '1.0.0')
+        self.assertEqual(choose('0.1.0-beta.1', 'current', 'beta', tags + ['v0.1.0-beta.1']), '0.1.0-beta.2')
+        self.assertEqual(choose('0.1.0-rc.1', 'current', 'rc', tags + ['v0.1.0-rc.1']), '0.1.0-rc.2')
+        self.assertEqual(choose('0.1.1-alpha.1', 'current', 'alpha', tags), '0.1.1-alpha.1')
+        with self.assertRaisesRegex(ValueError, 'backwards'):
+            choose('0.1.0-beta.1', 'current', 'alpha', tags + ['v0.1.0-beta.1'])
+        with self.assertRaisesRegex(ValueError, 'already stable'):
+            choose('0.1.0', 'current', 'stable', tags + ['v0.1.0'])
+        with self.assertRaisesRegex(ValueError, 'use Patch'):
+            choose('0.1.0', 'current', 'alpha', tags)
+        with self.assertRaises(ValueError):
+            choose('0.1.0-alpha.3', 'patch', 'unknown', tags)
+
+    def test_manual_one_click_release_workflow(self):
+        workflow = (ROOT / '.github/workflows/release.yml').read_text()
+        rust = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertIn('  workflow_dispatch:', workflow)
+        self.assertNotIn('  workflow_call:', rust)
+        self.assertEqual(workflow.count('ref: ${{ needs.prepare.outputs.sha }}'), 5)
+        for name in ('validate', 'build', 'linux', 'windows'):
+            self.assertIn(f'  {name}:\n    needs: prepare\n', workflow)
+        self.assertIn("github.ref == 'refs/heads/master'", workflow)
+        for option in ('current', 'patch', 'minor', 'major', 'alpha', 'beta', 'rc', 'stable'):
+            self.assertIn(f'          - {option}\n', workflow)
+        self.assertIn('python3 scripts/next-release-version.py "$BUMP" "$STAGE"', workflow)
+        self.assertIn('python3 scripts/bump-version.py "$VERSION"', workflow)
+        self.assertIn('git push origin HEAD:refs/heads/master', workflow)
+        self.assertIn('needs: [prepare, validate, build, linux, windows]', workflow)
+        self.assertIn('actions/download-artifact@v8', workflow)
+        self.assertIn('git push origin "refs/tags/$RELEASE_TAG"', workflow)
+        self.assertIn('--generate-notes', workflow)
+        self.assertIn('gh release create "$RELEASE_TAG"', workflow)
+
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
-        for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:
+        for name in ['.github/workflows/rust.yml', '.github/workflows/release.yml', '.github/release.yml', '.gitignore', '.gitattributes']:
             self.assertFalse(source.excluded(Path(name)), name)
         for name in ['target/audit.log', 'dist/BudgetTinker.app/budgettinker',
                      '.env', 'docs/budget.sqlite3', 'docs/budget.budgettinker-wal',

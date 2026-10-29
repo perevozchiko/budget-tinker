@@ -51,3 +51,6 @@ pub use menus::*;
 
 mod sidebar;
 pub use sidebar::*;
+
+mod popups;
+pub use popups::*;

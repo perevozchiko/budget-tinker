@@ -415,3 +415,44 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   in Net Worth produced no highlight. Synthetic screenshots were visually inspected
   and remain under `target/reports-filters/hover-*.png`. A read-only SQLite comparison
   confirmed the complete budget document is unchanged.
+
+## Account edit popup and sidebar highlights — 2026-10-29
+
+- Work is on `fix/account-edit-dialog`, created from local `master` with a clean working tree. No commit, push or publication was performed.
+- Right-click opens a 374px account popup below the corresponding row without a dimmed backdrop. Name and Note use bordered inset fields; Type is aligned with them. Adjust Balance keeps the parent draft, budget membership changes in the draft, and the footer offers Close/Reopen Account, Cancel and a green Done button. Existing account validation, persistence and Undo/Redo remain in use.
+- Hovering or editing an account uses a lighter blue (RGB 0/112/151), distinct from the selected register account (RGB 0/72/109). The edit highlight persists after the pointer leaves the row, including while the balance-adjustment child dialog is open.
+- Model/integration: the complete suite passed **280 Rust tests** (5 library, 119 binary/egui, 156 integration). Existing financial and persistence suites pass. No money, transfer or stored schema implementation changed.
+- Egui: five new tests exercise real pointer events for hover, right-click opening, both simultaneous highlight colors, popup/footer geometry, budget toggling, Cancel, Done, Close/Reopen and opening the balance-adjustment child. They verify draft preservation, rejecting nonzero account closure without data/Undo changes, saving name/type/note/membership in one change, SQLite persistence and complete-document Undo/Redo. Escape from the child returns to the unsaved account draft.
+- Formatting, strict all-target Clippy and example checks passed. All four dependency audits passed with the existing scoped advisory exception; all **11 release-tool tests** passed.
+- Native GUI: the macOS ARM64 bundle was rebuilt; strict ad-hoc signature and Info.plist checks passed. Final PID **49541**, window **19807**, opened fresh synthetic `/tmp/budgettinker-account-colors-3039gcut/demo.budgettinker`, confirmed by lsof. Selected Checking in the register, then right-clicked Cash. Visually inspected the anchored popup, field borders and distinct dark Checking/lighter Cash highlights. A read-only SQLite comparison confirmed the complete stored document was unchanged after navigation and opening the popup. Final synthetic capture: `target/account-dialog/final-colors.png`; logs and test captures stay under target/.
+- Live edit/save/Undo and balance-adjustment acceptance are not claimed; account mutation and Undo/Redo were verified through egui events and SQLite above. An earlier scripted native edit sequence did not reach its expected save and was not accepted as evidence. No external application screenshot or personal budget was added to the source tree.
+
+## Documentation wording cleanup — 2026-10-29
+
+- Icon-edit notes describe the requested colors, texture and geometry directly. The palette module documents its color space. Project asset provenance, artwork terms, dependency attribution and upstream license texts are retained.
+- Product documentation was searched for external-product names and visual-development wording. Import compatibility details and data-safety instructions remain intact.
+- The account-popup implementation and checks recorded above are included in the same branch. This follow-up changes prose and a Rust module comment; no additional UI or data behavior changed.
+
+- Final follow-up checks: all 280 Rust tests, formatting, strict Clippy, examples, all four dependency audits and 11 release-tool tests passed. The bundle was rebuilt after the documentation cleanup; strict signature and plist checks passed. Fresh launch PID **60772** uses `/tmp/budgettinker-fresh-8vd5lcse/demo.budgettinker`; no additional editing workflow was exercised during this launch.
+
+## Sidebar selection priority — 2026-10-29
+
+- Selected register accounts now retain RGB 0/72/109 while hovered or edited. Other hovered/edited rows use the slightly lighter RGB 0/92/128. This supersedes the earlier RGB 0/112/151 hover color and fixes hover/edit incorrectly taking priority over selection.
+- Model/integration: all **280 Rust tests** passed (5 library, 119 binary/egui, 156 integration); no financial or persistence implementation changed. Formatting, strict all-target Clippy and example checks passed. All four dependency audits and all 11 release-tool tests passed.
+- Egui: extended the sidebar event regression to move onto the selected row, onto another row, and away from the rows. It verifies that selection stays dark, other-row hover differs, the edited row stays highlighted, and opening the selected account editor preserves its dark selection while clearing the previous row's hover.
+- Native GUI: rebuilt bundle; strict signature and plist checks passed. PID **66454**, window **19879**, uses fresh synthetic `/tmp/budgettinker-highlight-4r_0udcz/demo.budgettinker`. Visually inspected the final popup and measured rendered screenshot pixels: Checking stays 0/72/109 while hovered; moving to Cash changes only Cash to 0/92/128; opening Cash's popup preserves both colors. Complete-document SQLite comparison through a read-only connection remained equal after these interactions. Captures and exact pixel results are under `target/account-highlight-priority/`. No live account mutation was exercised.
+
+## Rounded popup pointers and dialog buttons — 2026-10-29
+
+- Account, category/group, note, hidden-category and register timeframe popups now share pointer rendering. The rounded tip and shoulders join the popup's actual top border; a filled strip covers that border only at the attachment, and the outer contour remains open at the base. Pointers use the popup's own layer and matching header/border colors. A popup placed above its trigger does not draw an inverted top pointer.
+- Category/group/note dialogs share 60×27 Cancel/Done buttons with consistent spacing, 13px text, disabled styling and keyboard-focus outlines. Notes use plain silver Cancel and blue Done, replacing the colored icon sections. Category/group input and link text sizes were reduced. Removed the now-unused general-button success mode and Cancel glyph; other button behavior and account-specific Done styling are preserved.
+- Model/integration: all **280 Rust tests** passed (5 library, 119 binary/egui, 156 integration). No financial calculation, validation or storage implementation changed. Egui: the existing event suites passed, including account popup geometry, actions, drafts, persistence and Undo/Redo, plus register timeframe interactions. No new graphical regression test is claimed for this visual change.
+- Formatting, strict all-target Clippy and examples passed. All four dependency audits passed with the existing scoped advisory exception; all 11 release-tool tests passed. The macOS ARM64 bundle was rebuilt; strict ad-hoc signature and Info.plist checks passed.
+- Native GUI: final PID **4935**, window **20037**, uses fresh synthetic `/tmp/budgettinker-popup-final-2r4hjdme/demo.budgettinker`, confirmed by lsof. Visually inspected account, category, group, note, timeframe and hidden-category popups. Rounded joins have no horizontal base stripe; category/group/note buttons align and use the same controls. Captures are under `target/popup-join-final/`.
+- Read-only SQLite comparison confirmed that opening/canceling the first four dialogs and navigating to the register left the complete document unchanged. To inspect the hidden-category popup, hid Rent/Mortgage through the actual UI, opened Unhide, then used native Undo; a second comparison confirmed restoration of the complete original document. Finished with the revised note dialog open. No personal data or supplied screenshots were added to the source tree.
+
+## Merge conflict resolution — 2026-10-29
+
+- Resolved the conflicts in DEVELOPMENT-PLAN.md and this log by retaining both report-filter and account/popup entries. A line-subsequence comparison against index stages 2 and 3 verified that every line from both sides remains in its original order. No application or workflow code was edited during resolution.
+- Model/integration and egui: all **284 Rust tests** passed (5 library, 123 binary/egui, 156 integration). Formatting, strict all-target Clippy and example checks passed. All **14 release-tool tests** and all four dependency audits passed with the existing scoped advisory exception.
+- No new bundle rebuild or native GUI check was performed for this documentation conflict resolution. Earlier branch-specific GUI evidence above remains historical; no combined native GUI verification is claimed. No commit, push or publication was performed.

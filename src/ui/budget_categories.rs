@@ -362,19 +362,14 @@ pub fn hidden_row(
             .center()
             .x
             .clamp(rect.left() + 18., rect.right() - 18.);
-        let painter = ui.ctx().layer_painter(egui::LayerId::new(
-            egui::Order::Tooltip,
-            ui.id().with("hidden_categories_pointer"),
-        ));
-        painter.add(egui::Shape::convex_polygon(
-            vec![
-                egui::pos2(center_x - 15., rect.top() + 2.),
-                egui::pos2(center_x + 15., rect.top() + 2.),
-                egui::pos2(button.rect.center().x, button.rect.bottom() + 1.),
-            ],
+        classic::popup_pointer(
+            &ui.ctx().layer_painter(popup.response.layer_id),
+            rect,
+            center_x,
+            button.rect.bottom() + 1.,
             egui::Color32::from_gray(232),
-            egui::Stroke::new(1.0_f32, egui::Color32::from_gray(128)),
-        ));
+            egui::Stroke::new(1_f32, egui::Color32::from_gray(128)),
+        );
     }
     action
 }

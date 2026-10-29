@@ -1,0 +1,39 @@
+# GitHub uses these PR labels to organize automatically generated release notes.
+# The first matching category wins; unlabelled PRs go into Other Changes.
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - no-release-notes
+  categories:
+    - title: "🚨 Breaking Changes"
+      labels:
+        - breaking-change
+    - title: "✨ New Features"
+      labels:
+        - feature
+        - enhancement
+    - title: "🐛 Bug Fixes"
+      labels:
+        - bug
+        - bugfix
+        - fix
+    - title: "⚡ Improvements"
+      labels:
+        - improvement
+        - performance
+        - refactor
+    - title: "📚 Documentation"
+      labels:
+        - documentation
+        - docs
+    - title: "🛠 Maintenance & CI"
+      labels:
+        - ci
+        - build
+        - chore
+        - dependencies
+        - maintenance
+    - title: "Other Changes"
+      labels:
+        - "*"

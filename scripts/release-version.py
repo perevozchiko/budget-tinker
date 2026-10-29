@@ -36,7 +36,7 @@ def check_tag(tag, manifest_version, lock_version):
 
 def main():
     version, locked = package_versions(ROOT)
-    prerelease = check_tag(os.environ["GITHUB_REF_NAME"], version, locked)
+    prerelease = check_tag(os.getenv("RELEASE_TAG") or os.environ["GITHUB_REF_NAME"], version, locked)
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"version={version}\nprerelease={prerelease}\n")
     print(f"Verified release: v{version} (prerelease={prerelease})")
