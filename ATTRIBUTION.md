@@ -5,14 +5,14 @@
 | Paths | Author / source | License and notices |
 | --- | --- | --- |
 | `assets/icon-artwork.png`, `assets/app-icon.png`, `assets/BudgetTinker.ico` | User-supplied BudgetTinker release kit; background edited with built-in imagegen on 2026-10-28 at the owner’s request to match the interface’s teal texture. Processed into platform formats. | [Artwork license](assets/LICENSE.md): MIT OR Apache-2.0 to the extent the project can grant rights; no exclusive copyright, trademark registration or uniqueness claim. The artwork PNG is authoritative. Packaging scales it to 824×824 on a transparent 1024×1024 canvas for Dock sizing and clips the rounded-square boundary. The same padded PNG is embedded by eframe and converted to .icns. |
-| `locales/en.json`, `src/theme/icons.rs` | Existing local project, English labels and code-drawn UI symbols | MIT OR Apache-2.0. No old app logo copied. |
+| `locales/en.json`, `src/theme/icons.rs` | Existing local project, English labels and code-drawn UI symbols | MIT OR Apache-2.0. |
 | `tests/fixtures/bank/**`, `tests/fixtures/legacy/*.yfull` | Synthetic local regression scenarios: fabricated accounts, payees, dates and amounts | MIT OR Apache-2.0 (see LICENSE-STATUS.md). File extensions/field names describe interoperability, not bundled proprietary application code. |
-| `tests/fixtures/bank/matching/expected.json` | Synthetic financial projections and observed match outcomes from local regression research; formerly stored among comparison docs | MIT OR Apache-2.0 (see LICENSE-STATUS.md). Contains test facts only; no executable, resource, UI screenshot or commercial application source. |
+| `tests/fixtures/bank/matching/expected.json` | Synthetic financial projections and observed match outcomes from local regression research | MIT OR Apache-2.0 (see LICENSE-STATUS.md). Contains test facts only; no executable, resource, UI screenshot or commercial application source. |
 | `examples/*.rs` | Local synthetic demo generators | MIT OR Apache-2.0 (see LICENSE-STATUS.md). |
 | `docs/screenshots/budgettinker.png` | Real BudgetTinker macOS screenshot with generated demo data | Project screenshot, MIT OR Apache-2.0; includes embedded fonts under their own licenses. |
 
-No commercial reference app binaries, installers, original-app screenshots, comparison
-reports, downloaded artwork or external standalone font files are included.
+Distributed assets consist of project artwork, synthetic fixtures, the BudgetTinker
+screenshot and the dependency materials listed below.
 
 ## Embedded dependency assets
 

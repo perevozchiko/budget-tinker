@@ -25,7 +25,7 @@ The license decision is recorded in LICENSE-STATUS.md; this provenance inventory
   request. `assets/app-icon.png` and `.ico` are normalized/padded derivatives; .icns is
   generated during bundling. The source, prompt and workflow are in ICON-EDIT.md.
 - `docs/screenshots/budgettinker.png`: real application window with synthetic demo values;
-  no generated/fake application UI and no commercial reference screenshot is included.
+  the screenshot shows the running BudgetTinker application.
 - `locales/en.json`: existing local English labels; no external localization corpus cited.
 - `tests/fixtures/bank/**` and `tests/fixtures/legacy/*.yfull`: small synthetic parser and
   matching scenarios with fabricated records. File/field names retain interoperability.
@@ -33,8 +33,8 @@ The license decision is recorded in LICENSE-STATUS.md; this provenance inventory
 - `docs/third-party/**`: dependency legal notices and declared authors. Those grants remain
   separate. Embedded egui fonts and bundled SQLite are explicitly accounted for.
 
-No proprietary app executable, installer, original-app screenshot, downloaded sample
-artwork, account database, bank credential or user budget is part of public candidates.
+Public candidates contain project sources, artwork, synthetic fixtures and dependency
+notices. Personal account databases, bank credentials and user budgets are excluded.
 The source/secret scan is evidence about the current files, not a claim of an independently
 certified clean-room development process or a guarantee that no third-party right exists.
 

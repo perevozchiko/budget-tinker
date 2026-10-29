@@ -8,8 +8,13 @@ impl App {
         label_w: f32,
         col_w: f32,
     ) {
-        let (strip, _) =
-            ui.allocate_exact_size(Vec2::new(ui.available_width(), 119.), egui::Sense::hover());
+        let collapsed = self.preferences.budget_summary_collapsed;
+        let height = if collapsed { 49. } else { 113. };
+        let mut toggle = false;
+        let (strip, _) = ui.allocate_exact_size(
+            Vec2::new(ui.available_width(), height + 6.),
+            egui::Sense::hover(),
+        );
         let p = ui.painter().clone();
         for (i, month) in months.iter().enumerate() {
             let card = egui::Rect::from_min_size(
@@ -17,7 +22,7 @@ impl App {
                     strip.left() + label_w + 8. + i as f32 * (col_w + 8.),
                     strip.top(),
                 ),
-                Vec2::new(col_w, 113.),
+                Vec2::new(col_w, height),
             );
             classic::gradient(
                 &p,
@@ -87,19 +92,11 @@ impl App {
                 7,
                 Color32::from_gray(181),
             );
-            egui::Popup::menu(&quick).show(|ui| {
-                if classic::button(ui, "Скопировать прошлый месяц").clicked()
-                {
-                    let previous = month_shift(month, -1);
-                    self.change(|b| {
-                        for c in b.categories.clone() {
-                            b.allocate(month, &c.id, b.allocated(&previous, &c.id))?;
-                        }
-                        Ok(())
-                    });
-                    ui.close();
-                }
+            #[cfg(test)]
+            ui.ctx().data_mut(|d| {
+                d.insert_temp(egui::Id::new(("month_quick_button", month)), quick.rect)
             });
+            egui::Popup::menu(&quick).show(|ui| self.month_quick_menu(ui, month));
             let allocated: i64 = self
                 .b
                 .categories
@@ -145,45 +142,87 @@ impl App {
                     format!("Назначено в {short}"),
                 ]
             };
-            for (line, (value, label)) in [
-                previous,
-                Some(self.b.overspent(&prev)),
-                summary.map(|s| s.income),
-                Some(-allocated),
-            ]
-            .into_iter()
-            .zip(labels)
-            .enumerate()
-            {
-                let y = card.top() + 12. + line as f32 * 13.;
-                let value = value
-                    .map(|v| {
-                        if line == 2 && v >= 0 {
-                            format!("+{}", i18n::number(v, &self.b.base))
-                        } else {
-                            i18n::number(v, &self.b.base)
-                        }
-                    })
-                    .unwrap_or_else(|| "—".into());
-                p.text(
-                    egui::pos2(card.left() + 128., y),
-                    egui::Align2::RIGHT_CENTER,
-                    value,
-                    FontId::proportional(11.),
-                    Color32::from_gray(198),
-                );
-                p.text(
-                    egui::pos2(card.left() + 134., y),
-                    egui::Align2::LEFT_CENTER,
-                    label,
-                    FontId::proportional(10.8),
-                    Color32::from_gray(193),
-                );
+            if !collapsed {
+                for (line, (value, label)) in [
+                    previous,
+                    Some(self.b.overspent(&prev)),
+                    summary.map(|s| s.income),
+                    Some(-allocated),
+                ]
+                .into_iter()
+                .zip(labels)
+                .enumerate()
+                {
+                    let y = card.top() + 12. + line as f32 * 13.;
+                    let value = value
+                        .map(|v| {
+                            if line == 2 && v >= 0 {
+                                format!("+{}", i18n::number(v, &self.b.base))
+                            } else {
+                                i18n::number(v, &self.b.base)
+                            }
+                        })
+                        .unwrap_or_else(|| "—".into());
+                    if line == 2 {
+                        let response = ui
+                            .interact(
+                                egui::Rect::from_min_max(
+                                    egui::pos2(card.left() + 51., y - 6.5),
+                                    egui::pos2(tools.left(), y + 6.5),
+                                ),
+                                ui.id().with(("month_income", month)),
+                                egui::Sense::click(),
+                            )
+                            .on_hover_cursor(egui::CursorIcon::PointingHand)
+                            .on_hover_text("Show income transactions");
+                        #[cfg(test)]
+                        ui.ctx().data_mut(|d| {
+                            d.insert_temp(egui::Id::new(("month_income", month)), response.rect)
+                        });
+                        egui::Popup::menu(&response).show(|ui| self.month_income_popup(ui, month));
+                    }
+                    p.text(
+                        egui::pos2(card.left() + 128., y),
+                        egui::Align2::RIGHT_CENTER,
+                        value,
+                        FontId::proportional(11.),
+                        Color32::from_gray(198),
+                    );
+                    p.text(
+                        egui::pos2(card.left() + 134., y),
+                        egui::Align2::LEFT_CENTER,
+                        label,
+                        FontId::proportional(10.8),
+                        Color32::from_gray(193),
+                    );
+                }
             }
+            let amount_y = if collapsed { 18. } else { 82. };
+            let label_y = if collapsed { 36. } else { 100. };
+            let response = ui
+                .interact(
+                    egui::Rect::from_min_max(
+                        egui::pos2(card.left() + 51., card.top() + amount_y - 14.),
+                        egui::pos2(tools.left(), card.bottom()),
+                    ),
+                    ui.id().with(("summary_toggle", month)),
+                    egui::Sense::click(),
+                )
+                .on_hover_cursor(egui::CursorIcon::PointingHand)
+                .on_hover_text(if collapsed {
+                    "Click to expand details"
+                } else {
+                    "Click to collapse details"
+                });
+            #[cfg(test)]
+            ui.ctx().data_mut(|d| {
+                d.insert_temp(egui::Id::new(("summary_toggle", month)), response.rect)
+            });
+            toggle |= response.clicked();
             match available {
                 Ok(value) => {
                     p.text(
-                        egui::pos2(card.center().x + 20., card.top() + 82.),
+                        egui::pos2(card.center().x + 20., card.top() + amount_y),
                         egui::Align2::CENTER_CENTER,
                         format!("= {}", i18n::money(value, &self.b.base)),
                         crate::palette::bold(22.),
@@ -196,7 +235,7 @@ impl App {
                         },
                     );
                     p.l_text(
-                        egui::pos2(card.center().x + 20., card.top() + 100.),
+                        egui::pos2(card.center().x + 20., card.top() + label_y),
                         egui::Align2::CENTER_CENTER,
                         "Доступно для распределения",
                         crate::palette::bold(11.),
@@ -205,7 +244,7 @@ impl App {
                 }
                 Err(error) => {
                     p.l_text(
-                        egui::pos2(card.center().x + 20., card.top() + 81.),
+                        egui::pos2(card.center().x + 20., card.top() + amount_y),
                         egui::Align2::CENTER_CENTER,
                         "Бюджет недоступен",
                         crate::palette::bold(15.),
@@ -219,6 +258,11 @@ impl App {
                     .l_on_hover_text(error);
                 }
             }
+        }
+        if toggle {
+            self.preferences.budget_summary_collapsed = !collapsed;
+            self.save_preferences();
+            ui.ctx().request_repaint();
         }
     }
 }

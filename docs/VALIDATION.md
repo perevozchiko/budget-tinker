@@ -255,3 +255,105 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Fast-forwarded to `21c2f5b` (`0.1.0-alpha.1`) while preserving the quick-budget/calculator changes.
 - All **264 Rust tests** passed (5 library, 109 binary/egui, 150 integration). Formatting, strict all-target Clippy and example checks passed. Seven release-tool tests and all four dependency audits passed with the existing scoped advisory exception.
 - Live GUI/bundle evidence above predates this version-only pull; no additional live GUI acceptance is claimed here.
+
+## Account ordering work in progress — 2026-10-29
+
+- BudgetTinker supports dragging within a displayed group through the save/undo path. The Rust suite (264 tests), formatting, strict Clippy and example checks passed. No dedicated reorder test or live interaction verification was completed.
+- macOS bundle rebuilt; codesign and plist checks passed. It was launched with fresh synthetic data; reorder and persistence were not checked live.
+
+## Account drag animation — 2026-10-29
+
+- BudgetTinker draws the dragged account as a translucent floating row and animates surrounding rows towards the prospective position.
+- Model/integration and egui: existing 264 tests passed before the final pointer-offset adjustment; strict Clippy passed after it. No dedicated animation event test was added.
+- Live GUI: inspected a synthetic drag in the rebuilt app and identified an incorrect horizontal offset; the offset was subsequently corrected, but that final correction has not been inspected live. Bundle signature and plist passed after rebuilding. Release-tool tests and dependency audits passed.
+
+## Account drop clipping review fix — 2026-10-29
+
+- Drop targets now require the pointer inside both the account row and the scroll UI clip rectangle, preventing hidden rows from accepting drops over controls below the list.
+- Removed three legacy brand mentions from documentation. Case-insensitive searches of all source-tree text (including hidden/ignored files, excluding Git metadata and generated target/dist output) found no remaining contiguous short or expanded brand names; separator variants were checked too.
+- Model/integration and egui: all 264 existing Rust tests passed (5 library, 109 binary/egui, 150 integration). No dedicated drag regression event test was added. Formatting, strict all-target Clippy and example checks passed; seven release-tool tests and all four dependency audits passed with the existing scoped exception.
+- macOS bundle rebuilt; strict signature and plist checks passed. Rebuilt app PID 81741 / window 18068 was visually inspected with fresh synthetic `/tmp/budgettinker-drop-j5ftdy8_/demo.budgettinker`, confirmed by lsof. Screenshot is under target/drop-fix-window.png. This checks launch/appearance only; scrolling drag behavior and persistence were not exercised live.
+
+## Month quick-budget menu and summary interactions — 2026-10-29
+
+- The month menu previously only copied the preceding month and overwrote filled cells.
+  It now offers previous allocations, previous net outflows, averages over up to three
+  or twelve complete months, scheduled outflows, zero category balance and zero allocations.
+  The first six commands fill only zero-valued allocations (including stored zeros and
+  hidden categories); zero allocations replaces every category's amount for that month.
+  All values are computed before mutation, so missing scheduled exchange rates cannot
+  leave a partially filled month. The existing commit path saves the whole change once.
+- Model/integration: new regressions cover the three-month history cap, empty months,
+  integer rounding, allocation-only history, invalid month rejection and atomic failure
+  on a missing scheduled rate. Income details cover deferred income, split income,
+  off-budget exclusion, internal transfers and frozen foreign-currency amounts. Currency
+  revaluation is shown separately from categorized income, matching the card's total.
+- Egui: actual pointer events open the month popup and select each of its seven entries;
+  each test checks allocation results, positive/negative filled-cell preservation, hidden
+  categories, SQLite persistence and a single Undo/Redo restoring the complete document.
+  Further event tests check missing-rate errors without persistence/Undo changes, global
+  summary collapse/expand and saved preferences, income popup opening and exact-month
+  Account View filtering (including income received in the previous month).
+- All **274 Rust tests** passed: 5 library, 113 binary/egui and 156 integration tests.
+  Formatting, strict all-target Clippy and example checks passed. All four dependency
+  audits passed with the existing scoped advisory exception. Release-tool tests: **6/7
+  passed**; the existing workflow's `push` trigger conflicts with the manual-only policy
+  test. This unrelated CI configuration was not changed; no full release-tool pass is
+  claimed.
+- Clicking Available to Budget collapses all displayed month cards; clicking again
+  expands them. Income opens a transaction table with Show in Account View and Close.
+- macOS bundle rebuilt; strict ad-hoc signature and plist verification passed. Final
+  executable PID **40448**, window **18922**, opened the fresh synthetic budget
+  `/tmp/budgettinker-month-final-kra3hywa/demo.budgettinker`, confirmed with lsof.
+  Live month-menu checks compare every category allocation through read-only SQLite:
+  November totals are 266500 (previous budget), 100752 (previous outflows and both
+  available-history averages), 2990 (scheduled), -165748 (zero balance), and 0 (zero
+  allocations), in minor units. Each command is undone through the native shortcut;
+  the complete stored document must equal the original synthetic document afterwards.
+  GUI scripts, results and synthetic screenshots remain under `target/month-menu/`.
+- Final bundle appearance: inspected collapsed cards and the income table, then used
+  Show in Account View to display the three synthetic income rows totaling 512600 minor
+  units. Complete SQLite document equality with the original synthetic budget passed
+  after all seven menu commands plus Undo, collapse/expand and income navigation.
+
+## Budget cell editor geometry and arrow — 2026-10-29
+
+- Reproduced the row movement in a new egui regression: entering a budget cell moved
+  following rows upward by two pixels at 1050px window width. The input's scope and
+  the arrow's `ui.put` both advanced the parent layout despite the row already having
+  its space allocated. The input now uses an independent child UI and the arrow uses
+  an explicit interaction rectangle; neither changes the parent cursor.
+- The editor uses a compact square gray menu button outside the cell, with a black
+  downward triangle. The button is 16x16px, vertically centered, with a drawn triangle
+  and pressed gradient; it no longer depends on the font's tiny dropdown glyph.
+- Egui: the regression compares every category row rectangle before editing, after
+  entering the input, after opening quick-budget and after cancellation at both 1050px
+  and 1440px widths. All rectangles are identical; cancellation leaves the complete
+  SQLite document unchanged with no Undo entry. Existing editor tests continue to
+  cover focus, keyboard navigation, menu choices, calculator and persistence failures.
+- Model/integration and egui: all **275 Rust tests** passed (5 library, 114 binary/egui,
+  156 integration). Formatting, strict all-target Clippy and example checks passed.
+  All four dependency audits passed. Release-tool tests retain the previously documented
+  **6/7** result because of the existing manual-only CI policy conflict.
+- Native GUI: rebuilt macOS bundle, verified strict ad-hoc signature and plist. PID
+  **57415**, window **19017**, opened fresh synthetic
+  `/tmp/budgettinker-cell-y6qixxd2/demo.budgettinker`, confirmed through lsof.
+  Inspected the active Household Goods editor and its menu; screenshot grid-line
+  coordinates below the active row stayed identical before/after editing. Opening
+  the editor did not change SQLite. Selecting Balance to 0.00 for Groceries then saved
+  **7114** minor units, checked through a read-only connection; native Undo restored
+  the complete original document. Synthetic captures/logs remain under `target/cell-editor/`.
+- After committing the editor fix, merged fresh `origin/master` at **96b4e0d** without
+  conflicts. Its release-test policy update supersedes the earlier CI-test failure:
+  `scripts/test-release-tools.py` now passes **all 8 tests**. The incoming master change
+  only updates those policy tests; no application or dependency code changed in the merge.
+
+## Documentation maintenance — 2026-10-29
+
+- Product notes describe BudgetTinker's controls and behavior directly. Asset descriptions
+  retain their sources and license terms; dependency notices are unchanged.
+- Documentation-only changes: all 275 Rust tests, formatting, strict Clippy, example
+  checks, eight release-tool tests and all four dependency audits passed.
+- Rebuilt the macOS bundle with the updated attribution. Packaged attribution matches
+  the source; strict ad-hoc signature and plist checks passed. No additional live GUI
+  check was performed for this documentation-only update.

@@ -118,6 +118,12 @@ impl App {
                 }
             });
         ui.add_space(8.);
+        let drag_id = egui::Id::new("sidebar_account_drag");
+        let mut dragging = ctx.data(|data| data.get_temp::<String>(drag_id));
+        let target_id = egui::Id::new("sidebar_account_drag_target");
+        let offset_id = egui::Id::new("sidebar_account_drag_offset");
+        let previous_target = ctx.data(|data| data.get_temp::<(String, bool)>(target_id));
+        let mut drop_target: Option<(String, bool)> = None;
         egui::ScrollArea::vertical()
             .max_height((ui.available_height() - 144.).max(130.))
             .auto_shrink([false, true])
@@ -222,25 +228,114 @@ impl App {
                                 self.save_preferences();
                             }
                             if !collapsed {
-                                for account in accounts {
+                                let source_index = dragging
+                                    .as_ref()
+                                    .and_then(|id| accounts.iter().position(|a| &a.id == id));
+                                let preview_index = previous_target
+                                    .as_ref()
+                                    .and_then(|(id, after)| {
+                                        let source = source_index?;
+                                        let target = accounts.iter().position(|a| &a.id == id)?;
+                                        Some((target + usize::from(*after)).saturating_sub(
+                                            usize::from(source < target + usize::from(*after)),
+                                        ))
+                                    })
+                                    .or(source_index);
+                                for (index, account) in accounts.into_iter().enumerate() {
                                     let (row, response) = ui.allocate_exact_size(
                                         Vec2::new(ui.available_width(), 25.),
-                                        egui::Sense::click(),
+                                        egui::Sense::click_and_drag(),
                                     );
+                                    if response.drag_started_by(egui::PointerButton::Primary) {
+                                        dragging = Some(account.id.clone());
+                                        if let Some(pointer) = response.interact_pointer_pos() {
+                                            ctx.data_mut(|data| {
+                                                data.insert_temp(offset_id, pointer - row.min)
+                                            });
+                                        }
+                                    }
+                                    if let Some(source) = dragging.as_deref()
+                                        && source != account.id
+                                        && self
+                                            .b
+                                            .accounts
+                                            .iter()
+                                            .find(|a| a.id == source)
+                                            .is_some_and(|a| {
+                                                a.closed == account.closed
+                                                    && (a.closed
+                                                        || a.on_budget == account.on_budget)
+                                            })
+                                        && let Some(pointer) =
+                                            ui.input(|i| i.pointer.interact_pos())
+                                        && row.contains(pointer)
+                                        && ui.clip_rect().contains(pointer)
+                                    {
+                                        let after = pointer.y > row.center().y;
+                                        drop_target = Some((account.id.clone(), after));
+                                    }
+                                    let is_dragged =
+                                        dragging.as_deref() == Some(account.id.as_str());
+                                    let shift = match (source_index, preview_index) {
+                                        (Some(source), Some(target))
+                                            if index > source && index <= target =>
+                                        {
+                                            -25.
+                                        }
+                                        (Some(source), Some(target))
+                                            if index < source && index >= target =>
+                                        {
+                                            25.
+                                        }
+                                        _ => 0.,
+                                    };
+                                    let shift = ctx.animate_value_with_time(
+                                        egui::Id::new(("account_shift", &account.id)),
+                                        shift,
+                                        0.15,
+                                    );
+                                    let row = if is_dragged {
+                                        row.translate(
+                                            ui.input(|i| i.pointer.interact_pos()).map_or(
+                                                Vec2::ZERO,
+                                                |p| {
+                                                    p - row.min
+                                                        - ctx
+                                                            .data(|data| {
+                                                                data.get_temp::<Vec2>(offset_id)
+                                                            })
+                                                            .unwrap_or(row.size() * 0.5)
+                                                },
+                                            ),
+                                        )
+                                    } else {
+                                        row.translate(Vec2::new(0., shift))
+                                    };
+                                    let painter = if is_dragged {
+                                        ctx.layer_painter(egui::LayerId::new(
+                                            egui::Order::Tooltip,
+                                            egui::Id::new("account_drag_preview"),
+                                        ))
+                                    } else {
+                                        ui.painter().clone()
+                                    };
+                                    if is_dragged {
+                                        painter.rect_filled(
+                                            row,
+                                            2.,
+                                            Color32::from_rgba_unmultiplied(0, 49, 85, 210),
+                                        );
+                                    }
                                     if self.page == Page::Accounts
                                         && self.account.as_ref() == Some(&account.id)
                                     {
-                                        ui.painter().rect_filled(
+                                        painter.rect_filled(
                                             row.expand2(Vec2::new(8., 0.)),
                                             0.,
                                             crate::palette::SELECTED,
                                         );
                                     } else if response.hovered() {
-                                        ui.painter().rect_filled(
-                                            row,
-                                            2.,
-                                            Color32::from_white_alpha(13),
-                                        );
+                                        painter.rect_filled(row, 2., Color32::from_white_alpha(13));
                                     }
                                     let balance = self.b.balance(&account.id, None, false);
                                     let amount = if account.currency == self.b.base {
@@ -256,7 +351,7 @@ impl App {
                                     let width = if compact {
                                         0.
                                     } else {
-                                        ui.painter()
+                                        painter
                                             .layout_no_wrap(
                                                 amount.clone(),
                                                 font.clone(),
@@ -269,7 +364,7 @@ impl App {
                                         row.min + Vec2::new(16., 0.),
                                         row.max - Vec2::new(width + 8., 0.),
                                     );
-                                    ui.painter().with_clip_rect(name_rect).text(
+                                    painter.with_clip_rect(name_rect).text(
                                         name_rect.left_center(),
                                         egui::Align2::LEFT_CENTER,
                                         &account.name,
@@ -277,7 +372,7 @@ impl App {
                                         Color32::WHITE,
                                     );
                                     if !compact {
-                                        ui.painter().text(
+                                        painter.text(
                                             row.right_center(),
                                             egui::Align2::RIGHT_CENTER,
                                             amount,
@@ -299,6 +394,37 @@ impl App {
                     ui.add_space(8.);
                 }
             });
+        ctx.data_mut(|data| {
+            if let Some(target) = drop_target.clone() {
+                data.insert_temp(target_id, target);
+            } else {
+                data.remove::<(String, bool)>(target_id);
+            }
+        });
+        if ui.input(|i| i.pointer.button_released(egui::PointerButton::Primary)) {
+            if let (Some(source), Some((target, after))) = (dragging.take(), drop_target) {
+                self.change(|budget| {
+                    let Some(from) = budget.accounts.iter().position(|a| a.id == source) else {
+                        return Ok(());
+                    };
+                    let item = budget.accounts.remove(from);
+                    let Some(to) = budget.accounts.iter().position(|a| a.id == target) else {
+                        budget.accounts.insert(from, item);
+                        return Ok(());
+                    };
+                    budget.accounts.insert(to + usize::from(after), item);
+                    Ok(())
+                });
+            }
+            dragging = None;
+        }
+        ctx.data_mut(|data| {
+            if let Some(source) = dragging {
+                data.insert_temp(drag_id, source);
+            } else {
+                data.remove::<String>(drag_id);
+            }
+        });
         let (add, response) = ui.allocate_exact_size(
             Vec2::new(if compact { 64. } else { 119. }, 25.),
             egui::Sense::click(),

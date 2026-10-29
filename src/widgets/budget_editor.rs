@@ -766,22 +766,22 @@ impl Editor {
             ui.memory_mut(|m| m.request_focus(id));
         }
         ui.painter().rect_filled(rect, 0., Color32::WHITE);
-        let output = ui
-            .scope_builder(egui::UiBuilder::new().max_rect(rect.shrink(1.)), |ui| {
-                ui.spacing_mut().interact_size.y = rect.height() - 2.;
-                egui::TextEdit::singleline(&mut draft.text)
-                    .id(id)
-                    .font(FontId::proportional(12.))
-                    .horizontal_align(Align::RIGHT)
-                    .vertical_align(Align::Center)
-                    .margin(egui::Margin::symmetric(5, 0))
-                    .frame(false)
-                    .lock_focus(true)
-                    .desired_width(rect.width() - 2.)
-                    .min_size(rect.size() - Vec2::splat(2.))
-                    .show(ui)
-            })
-            .inner;
+        // The row has already been allocated by the register. A child UI keeps
+        // the input out of the parent's cursor/layout, including when it shrinks.
+        let mut input_ui = ui.new_child(egui::UiBuilder::new().max_rect(rect.shrink(1.)));
+        input_ui.set_clip_rect(ui.clip_rect().intersect(rect));
+        input_ui.spacing_mut().interact_size.y = rect.height() - 2.;
+        let output = egui::TextEdit::singleline(&mut draft.text)
+            .id(id)
+            .font(FontId::proportional(12.))
+            .horizontal_align(Align::RIGHT)
+            .vertical_align(Align::Center)
+            .margin(egui::Margin::symmetric(5, 0))
+            .frame(false)
+            .lock_focus(true)
+            .desired_width(rect.width() - 2.)
+            .min_size(rect.size() - Vec2::splat(2.))
+            .show(&mut input_ui);
         if focus {
             let mut state = output.state;
             state
@@ -811,10 +811,36 @@ impl Editor {
         );
         self.blur = output.response.lost_focus();
         let arrow = Rect::from_min_size(
-            rect.right_top() + Vec2::new(2., 2.),
-            Vec2::new(17., rect.height() - 4.),
+            egui::pos2(rect.right() + 1., rect.center().y - 8.),
+            Vec2::splat(16.),
         );
-        let button = ui.put(arrow, crate::classic::Button::new("▾").small());
+        let button = ui
+            .interact(arrow, id.with("quick_budget"), egui::Sense::click())
+            .on_hover_cursor(egui::CursorIcon::PointingHand);
+        let down = button.is_pointer_button_down_on();
+        crate::classic::gradient(
+            ui.painter(),
+            arrow,
+            1.,
+            Color32::from_gray(if down { 186 } else { 252 }),
+            Color32::from_gray(if down { 225 } else { 199 }),
+        );
+        ui.painter().rect_stroke(
+            arrow.shrink(0.5),
+            1.,
+            Stroke::new(1_f32, Color32::from_gray(117)),
+            egui::StrokeKind::Inside,
+        );
+        let center = arrow.center() + Vec2::new(0., if down { 1. } else { 0. });
+        ui.painter().add(egui::Shape::convex_polygon(
+            vec![
+                center + Vec2::new(-3.5, -1.5),
+                center + Vec2::new(3.5, -1.5),
+                center + Vec2::new(0., 2.5),
+            ],
+            Color32::from_gray(35),
+            Stroke::NONE,
+        ));
         let calculating = draft.calculator.is_some();
         let popup_width = if calculating { 252. } else { 435. };
         let popup = egui::Popup::menu(&button)

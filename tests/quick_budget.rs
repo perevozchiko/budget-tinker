@@ -128,3 +128,69 @@ fn historical_net_outflow_includes_refunds_and_excludes_off_budget() {
     assert_eq!(b.activity("2026-01", &category), -8_000);
     assert_eq!(b.average_category_outflow("2026-03", &category), (4_000, 2));
 }
+
+#[test]
+fn three_month_average_caps_history_and_counts_empty_months_with_integer_rounding() {
+    let mut b = Budget::new("USD");
+    let account = b.add_account("Cash", "USD", true, 0, "2025-01-01").unwrap();
+    let category = b.categories[0].id.clone();
+    for (date, value) in [
+        ("2025-01-05", -9999),
+        ("2026-01-05", -100),
+        ("2026-03-05", -102),
+    ] {
+        b.put_transaction(transaction(&account, &category, value, date))
+            .unwrap();
+    }
+    assert_eq!(
+        b.average_category_outflow_over("2026-04", &category, 3),
+        (67, 3)
+    );
+    assert_eq!(b.average_category_outflow("2026-04", &category), (17, 12));
+    let mut fresh = Budget::new("USD");
+    fresh
+        .allocate("2026-03", &category_for(&fresh), 123)
+        .unwrap();
+    assert_eq!(
+        fresh.average_category_outflow_over("2026-04", &category_for(&fresh), 3),
+        (0, 1)
+    );
+    assert_eq!(
+        fresh.average_category_outflow_over("2026-03", &category_for(&fresh), 3),
+        (0, 0)
+    );
+}
+fn category_for(b: &Budget) -> String {
+    b.categories[0].id.clone()
+}
+
+#[test]
+fn month_schedule_missing_rate_is_atomic_and_filled_cells_do_not_need_rates() {
+    let mut b = Budget::new("USD");
+    let cash = b.add_account("Cash", "USD", true, 0, "2026-01-01").unwrap();
+    let euro = b.add_account("Euro", "EUR", true, 0, "2026-01-01").unwrap();
+    let first = b.categories[0].id.clone();
+    let second = b.categories[1].id.clone();
+    for (account, category) in [(&cash, &first), (&euro, &second)] {
+        b.scheduled.push(schedule(
+            transaction(account, category, -100, "2026-04-10"),
+            Repeat::Never,
+        ));
+    }
+    let original = serde_json::to_value(&b).unwrap();
+    assert!(
+        b.quick_budget_month("2026-04", QuickBudget::Scheduled)
+            .is_err()
+    );
+    assert_eq!(serde_json::to_value(&b).unwrap(), original);
+    assert!(
+        b.quick_budget_month("invalid", QuickBudget::PreviousBudget)
+            .is_err()
+    );
+    assert_eq!(serde_json::to_value(&b).unwrap(), original);
+    b.allocate("2026-04", &second, -200).unwrap();
+    b.quick_budget_month("2026-04", QuickBudget::Scheduled)
+        .unwrap();
+    assert_eq!(b.allocated("2026-04", &first), 100);
+    assert_eq!(b.allocated("2026-04", &second), -200);
+}

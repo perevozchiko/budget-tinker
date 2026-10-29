@@ -9,6 +9,11 @@ pub fn shows_reconciled(transaction: &Transaction, hide: bool, search: &str) -> 
 
 pub fn matches(budget: &Budget, transaction: &Transaction, search: &str) -> bool {
     let query = search.trim().to_lowercase();
+    if let Some(month) = query.strip_prefix("income:") {
+        return budget
+            .income_contribution(transaction, month)
+            .is_ok_and(|v| v.is_some());
+    }
     match query.as_str() {
         "is:cleared or reconciled" => transaction.cleared || transaction.reconciled,
         "is:cleared" => transaction.cleared,
