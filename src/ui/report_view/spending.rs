@@ -182,7 +182,7 @@ pub(super) fn donut(
             {
                 response.clone().on_hover_text(format!(
                     "{}: {}",
-                    row.label,
+                    i18n::tr(ui.ctx(), &row.label),
                     i18n::money(row.value, currency)
                 ));
                 if response.clicked() {
@@ -216,7 +216,8 @@ pub(super) fn donut(
                 Stroke::new(1_f32, Color32::GRAY),
             );
             let width = (rect.width() * 0.25 - 18.).max(12.);
-            let mut label = row.label.clone();
+            let full_label = i18n::tr(ui.ctx(), &row.label);
+            let mut label = full_label.clone();
             while p
                 .layout_no_wrap(label.clone(), FontId::proportional(11.), INK)
                 .size()
@@ -226,7 +227,7 @@ pub(super) fn donut(
             {
                 label.pop();
             }
-            if label != row.label {
+            if label != full_label {
                 label.pop();
                 label.push('…');
             }
@@ -262,7 +263,7 @@ pub(super) fn donut(
             }
             hit.on_hover_text(format!(
                 "{}: {}",
-                row.label,
+                full_label,
                 i18n::money(row.value, currency)
             ));
         }

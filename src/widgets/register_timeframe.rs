@@ -308,7 +308,12 @@ fn silver(p: &egui::Painter, rect: egui::Rect, green: bool, hovered: bool) {
     );
 }
 
-fn action_button(ui: &mut egui::Ui, label: &str, done: bool, enabled: bool) -> egui::Response {
+pub(crate) fn action_button(
+    ui: &mut egui::Ui,
+    label: &str,
+    done: bool,
+    enabled: bool,
+) -> egui::Response {
     let (rect, response) = ui.allocate_exact_size(
         Vec2::new(if done { 69. } else { 76. }, 28.),
         if enabled {
@@ -387,7 +392,7 @@ fn dropdown(
     });
 }
 
-fn month_picker(ui: &mut egui::Ui, id: &str, value: &mut i32) -> bool {
+pub(crate) fn month_picker(ui: &mut egui::Ui, id: &str, value: &mut i32) -> bool {
     let old = *value;
     let mut month = value.rem_euclid(12);
     let mut year = value.div_euclid(12);

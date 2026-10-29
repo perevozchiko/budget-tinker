@@ -274,6 +274,7 @@ pub struct App {
     report_filter: budgettinker::reports::Filter,
     report_accounts: report_view::ReportAccounts,
     report_period: usize,
+    report_tabs: [Option<crate::preferences::ReportTabPreferences>; 5],
     report_selected_month: Option<String>,
     report_navigation: Vec<report_view::Drill>,
     collapsed: HashSet<String>,

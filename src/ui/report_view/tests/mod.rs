@@ -71,6 +71,7 @@ fn text_shapes(shapes: &[egui::epaint::ClippedShape]) -> Vec<(String, egui::Pos2
 
 mod charts;
 mod filters;
+mod interactions;
 mod matrix;
 mod periods;
 mod persistence;

@@ -17,12 +17,9 @@ impl App {
                     .clicked()
                 {
                     if self.report != index {
-                        self.report_accounts
-                            .switch(self.report, index, &mut self.report_filter);
-                        self.report_navigation.clear();
-                        self.report_selected_month = None;
+                        egui::Popup::close_all(ui.ctx());
                     }
-                    self.report = index;
+                    self.switch_report(index);
                 }
             }
         });
@@ -60,7 +57,10 @@ impl App {
             });
             ui.add_space(12.);
             let previous_filter = self.report_filter.clone();
-            self.report_filters(ui);
+            ui.push_id(
+                ("report_tab_filters", self.report, self.store.path.clone()),
+                |ui| self.report_filters(ui),
+            );
             if previous_filter != self.report_filter {
                 self.report_navigation.clear();
                 self.report_selected_month = None;

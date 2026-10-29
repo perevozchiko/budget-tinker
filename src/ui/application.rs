@@ -102,6 +102,7 @@ impl App {
             report_filter: budgettinker::reports::Filter::default(),
             report_accounts: report_view::ReportAccounts::default(),
             report_period: 5,
+            report_tabs: Default::default(),
             report_selected_month: None,
             report_navigation: vec![],
             collapsed: HashSet::new(),

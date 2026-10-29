@@ -358,6 +358,64 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   the source; strict ad-hoc signature and plist checks passed. No additional live GUI
   check was performed for this documentation-only update.
 
+## Reports filter panels — 2026-10-29
+
+- Replaced report filter combo menus with anchored classic panels: title band, pointer,
+  blue selection links, compact silver/blue checkboxes and pinned Cancel/Done buttons.
+  All five reports share the controls. Net Worth disables categories/payees and starts
+  with All Accounts; other reports start with Budget Accounts. Each report now retains
+  its own period and selections in budget-local preferences, with defaults for older files.
+- Timeframe offers This Month, Latest 3 Months, This Year, Last Year and All Dates.
+  Quick presets apply immediately and close the panel. Custom ranges use month/year
+  selectors and require Done; Cancel, Escape and outside dismissal discard drafts.
+  Relative/all-date presets include complete calendar months. Last Year is disabled
+  when the budget has no history before this year. Empty multi-selections disable Done.
+  Category groups support partial selection, hidden categories have an aggregate checkbox,
+  and accounts are grouped into budget, off-budget and closed accounts.
+- Model/integration: existing financial and persistence suites pass; period regressions
+  cover previous-year boundaries, three-month rollover and leap-year month endings.
+  No transaction, monetary calculation or budget-document schema changed.
+- Egui: pointer events exercise custom ranges, confirmation/cancellation, invalid-range
+  rejection, immediate presets and account selection in every report. Spending reports
+  additionally apply category/payee selections; Net Worth checks disabled filters and
+  a filtered net-worth total. Existing category events now cover the hidden-category
+  aggregate. Tests verify separate tab settings, restart persistence, unchanged complete
+  SQLite documents and no budget Undo entries from filter changes.
+- Required checks passed: formatting, **279 Rust tests** (5 library, 118 binary/egui,
+  156 integration), strict all-target Clippy and example checks. Release-tool tests:
+  **11 passed**. All four dependency audits passed with the existing scoped advisory
+  exception. The macOS bundle was rebuilt; strict ad-hoc codesign and plist checks passed.
+- Native macOS: final rebuilt executable PID **58381**, window **20405**, opened fresh
+  synthetic `/tmp/budgettinker-reports-final-uwa_qzd3/demo.budgettinker`, confirmed with
+  lsof. Visually inspected all four filter panels and all five report screens. Native
+  actions selected the off-budget account group, four Monthly Bills categories and
+  Coffee Shop, then applied This Year. Each other report applied Latest 3 Months;
+  returning to the first report restored its distinct filters. Assertions read the
+  saved budget-local preferences after each action. A read-only SQLite connection
+  verified the entire document still equals its original synthetic baseline.
+  Custom-range confirmation and invalid-range behavior were checked in egui, not
+  claimed as completed native interaction checks. Synthetic screenshots, the native
+  action script/results and build/audit logs remain under `target/reports-filters/`.
+- Reference application inspection used its already-open synthetic laboratory budget;
+  reference captures remain private under target/. No personal budget was opened,
+  no reference assets were added to source, and no publication or commit was performed.
+
+## Report filter hover correction — 2026-10-29
+
+- Enabled Timeframe, Categories, Payees and Accounts links now show the blue pill with
+  white text and arrow immediately on hover. Open panels keep the same highlight;
+  disabled Net Worth filters remain gray.
+- Model/integration and existing egui checks: all **279 Rust tests** passed. Formatting,
+  strict Clippy, example checks, 11 release-tool tests and all four dependency audits
+  passed. This visual correction adds no new test that duplicates its implementation.
+- Rebuilt the macOS bundle and verified strict codesign and plist. PID **74832**, window
+  **20552**, opened fresh synthetic `/tmp/budgettinker-report-hover-h753zaz4/demo.budgettinker`,
+  confirmed with lsof. CoreGraphics pointer movement without clicking produced the
+  highlight on all four controls in Income v. Expense; moving over disabled Categories
+  in Net Worth produced no highlight. Synthetic screenshots were visually inspected
+  and remain under `target/reports-filters/hover-*.png`. A read-only SQLite comparison
+  confirmed the complete budget document is unchanged.
+
 ## Account edit popup and sidebar highlights — 2026-10-29
 
 - Work is on `fix/account-edit-dialog`, created from local `master` with a clean working tree. No commit, push or publication was performed.
@@ -392,3 +450,9 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Formatting, strict all-target Clippy and examples passed. All four dependency audits passed with the existing scoped advisory exception; all 11 release-tool tests passed. The macOS ARM64 bundle was rebuilt; strict ad-hoc signature and Info.plist checks passed.
 - Native GUI: final PID **4935**, window **20037**, uses fresh synthetic `/tmp/budgettinker-popup-final-2r4hjdme/demo.budgettinker`, confirmed by lsof. Visually inspected account, category, group, note, timeframe and hidden-category popups. Rounded joins have no horizontal base stripe; category/group/note buttons align and use the same controls. Captures are under `target/popup-join-final/`.
 - Read-only SQLite comparison confirmed that opening/canceling the first four dialogs and navigating to the register left the complete document unchanged. To inspect the hidden-category popup, hid Rent/Mortgage through the actual UI, opened Unhide, then used native Undo; a second comparison confirmed restoration of the complete original document. Finished with the revised note dialog open. No personal data or supplied screenshots were added to the source tree.
+
+## Merge conflict resolution — 2026-10-29
+
+- Resolved the conflicts in DEVELOPMENT-PLAN.md and this log by retaining both report-filter and account/popup entries. A line-subsequence comparison against index stages 2 and 3 verified that every line from both sides remains in its original order. No application or workflow code was edited during resolution.
+- Model/integration and egui: all **284 Rust tests** passed (5 library, 123 binary/egui, 156 integration). Formatting, strict all-target Clippy and example checks passed. All **14 release-tool tests** and all four dependency audits passed with the existing scoped advisory exception.
+- No new bundle rebuild or native GUI check was performed for this documentation conflict resolution. Earlier branch-specific GUI evidence above remains historical; no combined native GUI verification is claimed. No commit, push or publication was performed.

@@ -3,12 +3,16 @@ use super::*;
 #[test]
 fn category_popup_keeps_draft_and_supports_group_done_cancel_and_dismissal() {
     let ctx = egui::Context::default();
+    let mut fonts = egui::FontDefinitions::default();
+    crate::palette::ensure_font_families(&mut fonts);
+    ctx.set_fonts(fonts);
     let mut budget = Budget::new("USD");
     budget.categories.truncate(3);
     for (index, category) in budget.categories.iter_mut().enumerate() {
         category.group = if index < 2 { "A Group" } else { "B Group" }.into();
         category.name = format!("Category {index}");
     }
+    budget.categories[2].hidden = true;
     let mut selection = Selection::All;
     let render = |selection: &mut Selection, events| {
         ctx.run(
@@ -112,6 +116,14 @@ fn category_popup_keeps_draft_and_supports_group_done_cancel_and_dismissal() {
     assert_eq!(
         selection,
         Selection::Selected(vec![budgettinker::model::UNCATEGORIZED_CATEGORY.into()])
+    );
+    click_text(&mut selection, "Categories");
+    click_text(&mut selection, "Select None");
+    click_text(&mut selection, "Hidden Categories");
+    click_text(&mut selection, "Done");
+    assert_eq!(
+        selection,
+        Selection::Selected(vec![budget.categories[2].id.clone()])
     );
 }
 

@@ -2,7 +2,6 @@ use super::*;
 
 impl App {
     pub(in crate::ui) fn report_filters(&mut self, ui: &mut egui::Ui) {
-        let before = self.report_period;
         Frame::new()
             .fill(Color32::from_gray(243))
             .stroke(Stroke::new(1_f32, Color32::from_gray(221)))
@@ -16,11 +15,12 @@ impl App {
                     .spacing([14., 3.])
                     .show(ui, |ui| {
                         ui.label("Timeframe:");
-                        filter_combo(ui, "report_period", PERIODS[self.report_period], |ui| {
-                            for (index, label) in PERIODS.iter().enumerate() {
-                                ui.selectable_value(&mut self.report_period, index, *label);
-                            }
-                        });
+                        timeframe::timeframe(
+                            ui,
+                            &self.b,
+                            &mut self.report_period,
+                            &mut self.report_filter,
+                        );
                         ui.end_row();
                         ui.label("Categories:");
                         ui.add_enabled_ui(self.report != 4, |ui| {
@@ -36,34 +36,14 @@ impl App {
                         self.multi_select_account(ui);
                         ui.end_row();
                     });
-                if self.report_period == 6 {
-                    ui.add_space(5.);
-                    ui.horizontal(|ui| {
-                        ui.label("From:");
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.report_filter.from)
-                                .desired_width(90.)
-                                .hint_text("YYYY-MM-DD"),
-                        );
-                        ui.label("Through:");
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.report_filter.through)
-                                .desired_width(90.)
-                                .hint_text("YYYY-MM-DD"),
-                        );
-                    });
-                }
             });
-        if before != self.report_period {
-            self.report_presets();
-        }
     }
 
     /// Multi-select control for categories. Show group names to disambiguate duplicates.
     pub(in crate::ui) fn multi_select_category(&mut self, ui: &mut egui::Ui) {
         let count = self.b.categories.len() + 1;
         let label = match &self.report_filter.category {
-            Selection::All | Selection::BudgetAccounts => format!("All Categories ({count})"),
+            Selection::All | Selection::BudgetAccounts => "All Categories".to_owned(),
             Selection::NoneSelected => "No Categories".to_owned(),
             Selection::Selected(ids) => {
                 let chosen = self
@@ -110,7 +90,7 @@ impl App {
         payees.dedup();
         let count = payees.len();
         let label = match &self.report_filter.payee {
-            Selection::All | Selection::BudgetAccounts => format!("All Payees ({count})"),
+            Selection::All | Selection::BudgetAccounts => "All Payees".to_owned(),
             Selection::NoneSelected => "No Payees".to_owned(),
             Selection::Selected(ids) => {
                 let chosen = payees.iter().filter(|p| ids.contains(p)).count();
@@ -127,7 +107,7 @@ impl App {
                 (
                     p.as_str(),
                     if p.is_empty() {
-                        "No Payee".to_owned()
+                        "[No Payee]".to_owned()
                     } else {
                         p.clone()
                     },
@@ -150,10 +130,9 @@ impl App {
     /// Budget Accounts and All Accounts are separate presets.
     pub(in crate::ui) fn multi_select_account(&mut self, ui: &mut egui::Ui) {
         let count = self.b.accounts.len();
-        let budget_count = self.b.accounts.iter().filter(|a| a.on_budget).count();
         let label = match &self.report_filter.accounts {
-            Selection::BudgetAccounts => format!("Budget Accounts ({budget_count}/{count})"),
-            Selection::All => format!("All Accounts ({count})"),
+            Selection::BudgetAccounts => "Budget Accounts".to_owned(),
+            Selection::All => "All Accounts".to_owned(),
             Selection::NoneSelected => "No Accounts".to_owned(),
             Selection::Selected(ids) => {
                 let chosen = self
@@ -182,7 +161,7 @@ impl App {
             &mut self.report_filter.accounts,
             true,
             |ui, selection| {
-                multi_select_items(ui, selection, &items);
+                account_selection_items(ui, selection, &items, &self.b);
             },
         );
     }

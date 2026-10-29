@@ -72,6 +72,15 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 
 - [x] Restrict account drop targets to the visible scroll clip and remove legacy brand references from project documentation.
 
+## Reports filter panels — 2026-10-29
+
+- [x] Use anchored Timeframe, Categories, Payees and Accounts panels across all five reports, with classic headers, blue selection links, checkbox lists and Cancel/Done footers.
+- [x] Apply quick timeframe presets immediately; confirm custom month/year ranges with Done and reject inverted or excessively long ranges.
+- [x] Group visible categories, hidden categories and budget/off-budget/closed accounts; keep irrelevant Net Worth filters disabled.
+- [x] Remember each report's filters independently in budget-local preferences, retaining compatibility with existing saved choices.
+- [x] Verify report interactions, persistence and unchanged budget data in egui and the rebuilt macOS application.
+- [x] Highlight enabled report filter links immediately on hover as well as while their panel is open.
+
 ## Account edit popup — 2026-10-29
 
 - [x] Replace the centered account-properties form with a compact popup anchored to the account row, with aligned Name/Note/Type fields, balance and budget-membership buttons, and Close Account/Cancel/Done footer actions.
@@ -86,3 +95,7 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 
 - [x] Share rounded, seamless pointer rendering across anchored account/category/group/note dialogs, hidden categories and the register timeframe popup.
 - [x] Give category/group/note dialogs consistent 60×27 Cancel/Done buttons, smaller control text and matching alignment; retain account-specific green Done styling.
+
+## Merge conflict resolution — 2026-10-29
+
+- [x] Preserve both report-filter and account/popup documentation during the merge from master; verify the combined Rust code, release tools and dependency policy.

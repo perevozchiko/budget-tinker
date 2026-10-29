@@ -36,6 +36,13 @@ pub struct ReportPreferences {
     pub filter: budgettinker::reports::Filter,
     pub spending_accounts: budgettinker::model::Selection,
     pub net_worth_accounts: budgettinker::model::Selection,
+    pub tabs: [Option<ReportTabPreferences>; 5],
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReportTabPreferences {
+    pub period: usize,
+    pub filter: budgettinker::reports::Filter,
 }
 
 impl Default for ReportPreferences {
@@ -46,6 +53,7 @@ impl Default for ReportPreferences {
             filter: budgettinker::reports::Filter::default(),
             spending_accounts: budgettinker::model::Selection::BudgetAccounts,
             net_worth_accounts: budgettinker::model::Selection::All,
+            tabs: Default::default(),
         }
     }
 }
