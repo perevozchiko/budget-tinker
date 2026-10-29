@@ -66,7 +66,35 @@ distribution archives are named `BudgetTinker-<version>-<platform>.<extension>`:
 `BudgetTinker-0.1.0-alpha.2-windows-x64.zip` and
 `BudgetTinker-0.1.0-alpha.2-linux-x64.tar.gz`. GitHub Actions artifacts use the
 corresponding name without an extension; GitHub wraps artifact downloads in a ZIP.
-The app bundle and executable names inside archives remain unchanged. The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
+The app bundle and executable names inside archives remain unchanged.
+
+### Publishing a GitHub Release
+
+Cargo.toml is the source of truth for the version. After completing a batch of changes,
+update Cargo.toml and Cargo.lock together using:
+
+```sh
+python3 scripts/bump-version.py 0.1.0-alpha.3
+```
+
+Commit and merge the version change into `master`. Wait for the automatically
+triggered CI to pass, then from an up-to-date local `master` branch run:
+
+```sh
+git pull --ff-only origin master
+git tag v0.1.0-alpha.3
+git push origin v0.1.0-alpha.3
+```
+
+Pushing the tag triggers another full check and build for macOS ARM64, Windows x64,
+and Linux x64. When all jobs pass, GitHub publishes a release titled
+`BudgetTinker v0.1.0-alpha.3` with generated changelog and the three
+versioned archives. Tags must match the package version and point to a commit in `master`;
+mismatches fail CI without publishing a release. Versions containing a prerelease
+suffix (e.g. `-alpha.3`) are marked as pre-releases. Ordinary commits to
+`master` do not publish releases. The tag is not created automatically.
+
+The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
 with `master` as its primary branch and an initial source commit. The project is not yet
 publicly released, and no GitHub Releases have been published.
 

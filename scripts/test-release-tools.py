@@ -28,6 +28,8 @@ deps = load('audit-dependencies')
 source = load('audit-release')
 package = load('package-source')
 artifact_names = load('ci-artifact-name')
+release_version = load('release-version')
+bump_version = load('bump-version')
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -67,7 +69,7 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = (ROOT / '.github/workflows/rust.yml').read_text()
         self.assertRegex(
             workflow,
-            r'(?m)^on:\n  push:\n    branches:\n      - master\n  workflow_dispatch:\n',
+            r"(?m)^on:\n  push:\n    branches:\n      - master\n    tags:\n      - 'v\\*'\n  workflow_dispatch:\n",
         )
         self.assertNotIn('  pull_request:', workflow)
         self.assertIn('        default: all', workflow)
@@ -105,6 +107,49 @@ class ReleasePolicyTests(unittest.TestCase):
             artifact_names.artifact_stem('invalid/version', 'macos-arm64')
         with self.assertRaises(ValueError):
             artifact_names.artifact_stem('0.1.0-alpha.2', 'unknown')
+
+    def test_tag_release_is_gated_by_successful_platform_builds(self):
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertIn('needs: [validate, build, linux, windows]', workflow)
+        self.assertIn("startsWith(github.ref, 'refs/tags/v')", workflow)
+        self.assertIn('actions/download-artifact@v8', workflow)
+        self.assertIn('git merge-base --is-ancestor HEAD origin/master', workflow)
+        self.assertIn('python3 scripts/release-version.py', workflow)
+        self.assertIn('gh release create "$RELEASE_TAG"', workflow)
+        self.assertIn('gh release upload "$RELEASE_TAG"', workflow)
+        self.assertIn('IS_PRERELEASE:', workflow)
+        self.assertEqual(
+            release_version.check_tag('v0.1.0-alpha.2', '0.1.0-alpha.2', '0.1.0-alpha.2'),
+            'true',
+        )
+        self.assertEqual(
+            release_version.check_tag('v1.2.3', '1.2.3', '1.2.3'),
+            'false',
+        )
+        with self.assertRaisesRegex(ValueError, 'must match'):
+            release_version.check_tag('v0.1.0-alpha.3', '0.1.0-alpha.2', '0.1.0-alpha.2')
+        with self.assertRaisesRegex(ValueError, 'differs'):
+            release_version.check_tag('v0.1.0-alpha.2', '0.1.0-alpha.2', '0.1.0-alpha.1')
+
+    def test_bump_version_updates_both_cargo_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'Cargo.toml').write_text(
+                '[package]\nname = "budgettinker"\nversion = "0.1.0-alpha.2"\n\n[dependencies]\n'
+                'serde = "1"\n', encoding='utf-8'
+            )
+            (root / 'Cargo.lock').write_text(
+                'version = 4\n\n[[package]]\nname = "budgettinker"\n'
+                'version = "0.1.0-alpha.2"\n', encoding='utf-8'
+            )
+            self.assertTrue(bump_version.update_version(root, '0.1.0-alpha.3'))
+            self.assertEqual(
+                release_version.package_versions(root),
+                ('0.1.0-alpha.3', '0.1.0-alpha.3'),
+            )
+            self.assertFalse(bump_version.update_version(root, '0.1.0-alpha.3'))
+            with self.assertRaises(ValueError):
+                bump_version.update_version(root, 'invalid version')
 
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
         for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:

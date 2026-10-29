@@ -1,11 +1,13 @@
 name: Rust checks and desktop builds
 
-# Every commit to master (including merged pull requests) builds all platforms.
+# Commits to master and version tags build all platforms; tags also publish Releases.
 # Other branches are built only via Actions -> Run workflow.
 on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       platform:
@@ -201,3 +203,67 @@ jobs:
           name: ${{ steps.package.outputs.stem }}
           path: ${{ steps.package.outputs.stem }}.zip
           if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    needs: [validate, build, linux, windows]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Validate tag, version and master ancestry
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin master:refs/remotes/origin/master
+          if ! git merge-base --is-ancestor HEAD origin/master; then
+            echo "::error::Release tag must point to a commit in master"
+            exit 1
+          fi
+          python3 scripts/release-version.py
+      - name: Download successful build archives
+        uses: actions/download-artifact@v8
+        with:
+          pattern: BudgetTinker-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish release with platform archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          assets=(
+            "release-assets/BudgetTinker-${RELEASE_VERSION}-macos-arm64.zip"
+            "release-assets/BudgetTinker-${RELEASE_VERSION}-windows-x64.zip"
+            "release-assets/BudgetTinker-${RELEASE_VERSION}-linux-x64.tar.gz"
+          )
+          for archive in "${assets[@]}"; do
+            test -s "$archive" || { echo "::error::Missing release archive: $archive"; exit 1; }
+          done
+          count="$(find release-assets -maxdepth 1 -type f | wc -l | tr -d ' ')"
+          if [[ "$count" != 3 ]]; then
+            echo "::error::Unexpected number of release assets: $count"
+            exit 1
+          fi
+
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            options=()
+            if [[ "$IS_PRERELEASE" == true ]]; then
+              options+=(--prerelease --latest=false)
+            fi
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --verify-tag --title "BudgetTinker $RELEASE_TAG" \
+              --generate-notes "${options[@]}"
+          fi
