@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create reproducible version-and-revision names for CI desktop archives."""
+"""Create platform-specific distribution archive names from the Cargo package version."""
 
 import json
 import os
@@ -9,22 +9,20 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PLATFORMS = {"macOS", "linux-x86_64", "windows-x86_64"}
+PLATFORMS = {"macos-arm64", "windows-x64", "linux-x64"}
 
 
-def artifact_stem(version, commit, platform):
+def artifact_stem(version, platform):
     if platform not in PLATFORMS:
         raise ValueError(f"Unsupported platform: {platform}")
-    if not re.fullmatch(r"[0-9A-Za-z.+-]+", version):
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?(?:\+[0-9A-Za-z.-]+)?", version):
         raise ValueError(f"Invalid Cargo version: {version}")
-    if not re.fullmatch(r"[0-9a-fA-F]{40}", commit):
-        raise ValueError("GITHUB_SHA must be a full 40-character Git commit SHA")
-    return f"BudgetTinker-v{version}-{commit[:7]}-{platform}"
+    return f"BudgetTinker-{version}-{platform}"
 
 
 def main():
     if len(sys.argv) != 2:
-        raise SystemExit("Usage: ci-artifact-name.py macOS|linux-x86_64|windows-x86_64")
+        raise SystemExit("Usage: ci-artifact-name.py macos-arm64|windows-x64|linux-x64")
 
     metadata = json.loads(subprocess.check_output(
         ["cargo", "metadata", "--locked", "--no-deps", "--format-version", "1"],
@@ -32,7 +30,7 @@ def main():
         text=True,
     ))
     version = next(p["version"] for p in metadata["packages"] if p["name"] == "budgettinker")
-    stem = artifact_stem(version, os.environ["GITHUB_SHA"], sys.argv[1])
+    stem = artifact_stem(version, sys.argv[1])
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
         output.write(f"stem={stem}\n")
     print(f"Artifact: {stem}")

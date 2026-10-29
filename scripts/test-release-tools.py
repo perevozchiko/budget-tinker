@@ -90,14 +90,21 @@ class ReleasePolicyTests(unittest.TestCase):
         self.assertEqual(workflow.count('name: ${{ steps.package.outputs.stem }}'), 3)
         self.assertEqual(workflow.count('path: ${{ steps.package.outputs.stem }}.zip'), 2)
         self.assertIn('path: ${{ steps.package.outputs.stem }}.tar.gz', workflow)
-        self.assertEqual(
-            artifact_names.artifact_stem('0.1.0-alpha.1', 'a' * 40, 'macOS'),
-            'BudgetTinker-v0.1.0-alpha.1-aaaaaaa-macOS',
-        )
+        for platform, archive in (
+            ('macos-arm64', 'BudgetTinker-0.1.0-alpha.2-macos-arm64.zip'),
+            ('windows-x64', 'BudgetTinker-0.1.0-alpha.2-windows-x64.zip'),
+            ('linux-x64', 'BudgetTinker-0.1.0-alpha.2-linux-x64.tar.gz'),
+        ):
+            stem = artifact_names.artifact_stem('0.1.0-alpha.2', platform)
+            self.assertEqual(stem, archive.removesuffix('.tar.gz').removesuffix('.zip'))
+            self.assertIn(f'scripts/ci-artifact-name.py {platform}', workflow)
+        self.assertIn('test "$(uname -m)" = "arm64"', workflow)
+        self.assertIn('test "$(uname -m)" = "x86_64"', workflow)
+        self.assertIn('PROCESSOR_ARCHITECTURE -ne "AMD64"', workflow)
         with self.assertRaises(ValueError):
-            artifact_names.artifact_stem('0.1.0-alpha.1', 'invalid', 'macOS')
+            artifact_names.artifact_stem('invalid/version', 'macos-arm64')
         with self.assertRaises(ValueError):
-            artifact_names.artifact_stem('0.1.0-alpha.1', 'a' * 40, 'unknown')
+            artifact_names.artifact_stem('0.1.0-alpha.2', 'unknown')
 
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
         for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:

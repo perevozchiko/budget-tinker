@@ -99,7 +99,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Versioned package name
         id: package
-        run: python3 scripts/ci-artifact-name.py macOS
+        shell: bash
+        run: |
+          test "$(uname -m)" = "arm64"
+          python3 scripts/ci-artifact-name.py macos-arm64
       - name: Build app bundle
         run: bash scripts/bundle.sh
       - name: Verify macOS app bundle
@@ -136,7 +139,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Versioned package name
         id: package
-        run: python3 scripts/ci-artifact-name.py linux-x86_64
+        shell: bash
+        run: |
+          test "$(uname -m)" = "x86_64"
+          python3 scripts/ci-artifact-name.py linux-x64
       - name: Build Linux executable
         run: cargo build --release --locked
       - name: Verify and package Linux executable
@@ -169,7 +175,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Versioned package name
         id: package
-        run: python scripts/ci-artifact-name.py windows-x86_64
+        shell: pwsh
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") { throw "Expected an x64 Windows runner" }
+          python scripts/ci-artifact-name.py windows-x64
+          if ($LASTEXITCODE -ne 0) { throw "Artifact name generation failed" }
       - name: Build Windows executable
         run: cargo build --release --locked
       - name: Verify and package Windows executable
