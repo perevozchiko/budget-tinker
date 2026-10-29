@@ -349,3 +349,7 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   the editor did not change SQLite. Selecting Balance to 0.00 for Groceries then saved
   **7114** minor units, checked through a read-only connection; native Undo restored
   the complete original document. Synthetic captures/logs remain under `target/cell-editor/`.
+- After committing the editor fix, merged fresh `origin/master` at **96b4e0d** without
+  conflicts. Its release-test policy update supersedes the earlier CI-test failure:
+  `scripts/test-release-tools.py` now passes **all 8 tests**. The incoming master change
+  only updates those policy tests; no application or dependency code changed in the merge.
