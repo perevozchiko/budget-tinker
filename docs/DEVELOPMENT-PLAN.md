@@ -43,6 +43,7 @@ is verified; Windows and Linux builds and runtime support remain unverified.
 ## Next behavioral work (separate from branding)
 
 - [x] Keep the budget cell editor open while its quick-budget menu is pressed.
+- [x] Keep budget rows fixed while editing and opening quick-budget; use a compact square arrow like the inspected reference control.
 - [x] Extend the quick-budget menu with historical averages, scheduled outflows and a calculator.
 - [x] Match the quick-budget menu and calculator controls to the requested classic appearance.
 - [x] Preserve exact calculator intermediates, accept currency-independent decimal operands and round only the final monetary result.

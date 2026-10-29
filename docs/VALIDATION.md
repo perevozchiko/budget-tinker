@@ -319,3 +319,33 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   Show in Account View to display the three synthetic income rows totaling 512600 minor
   units. Complete SQLite document equality with the original synthetic budget passed
   after all seven menu commands plus Undo, collapse/expand and income navigation.
+
+## Budget cell editor geometry and arrow — 2026-10-29
+
+- Reproduced the row movement in a new egui regression: entering a budget cell moved
+  following rows upward by two pixels at 1050px window width. The input's scope and
+  the arrow's `ui.put` both advanced the parent layout despite the row already having
+  its space allocated. The input now uses an independent child UI and the arrow uses
+  an explicit interaction rectangle; neither changes the parent cursor.
+- Native reference inspection confirmed fixed row positions during editing and a
+  compact square gray button outside the cell, with a black downward triangle.
+  The new button is 16x16px, vertically centered, with a drawn triangle and pressed
+  gradient; it no longer depends on the font's tiny dropdown glyph. No reference
+  assets or financial data were copied or changed.
+- Egui: the regression compares every category row rectangle before editing, after
+  entering the input, after opening quick-budget and after cancellation at both 1050px
+  and 1440px widths. All rectangles are identical; cancellation leaves the complete
+  SQLite document unchanged with no Undo entry. Existing editor tests continue to
+  cover focus, keyboard navigation, menu choices, calculator and persistence failures.
+- Model/integration and egui: all **275 Rust tests** passed (5 library, 114 binary/egui,
+  156 integration). Formatting, strict all-target Clippy and example checks passed.
+  All four dependency audits passed. Release-tool tests retain the previously documented
+  **6/7** result because of the existing manual-only CI policy conflict.
+- Native GUI: rebuilt macOS bundle, verified strict ad-hoc signature and plist. PID
+  **57415**, window **19017**, opened fresh synthetic
+  `/tmp/budgettinker-cell-y6qixxd2/demo.budgettinker`, confirmed through lsof.
+  Inspected the active Household Goods editor and its menu; screenshot grid-line
+  coordinates below the active row stayed identical before/after editing. Opening
+  the editor did not change SQLite. Selecting Balance to 0.00 for Groceries then saved
+  **7114** minor units, checked through a read-only connection; native Undo restored
+  the complete original document. Synthetic captures/logs remain under `target/cell-editor/`.

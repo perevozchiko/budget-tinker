@@ -367,6 +367,8 @@ impl App {
                     }
                     let (rect, _) =
                         ui.allocate_exact_size(Vec2::new(total, 24.), egui::Sense::hover());
+                    #[cfg(test)]
+                    ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new(("budget_category_row", &c.id)), rect));
                     let row_hovered = ui.rect_contains_pointer(rect);
                     budget_row_fill(
                         ui.painter(),
@@ -492,6 +494,8 @@ impl App {
                                 Vec2::new(col_w / 3., rect.height()),
                             );
                             if j == 0 {
+                                #[cfg(test)]
+                                ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new(("budget_cell", month, &c.id)), cell));
                                 ui.painter().rect_stroke(
                                     cell,
                                     0.,
@@ -651,3 +655,6 @@ mod summary;
 mod quick_menu;
 
 mod income_popup;
+
+#[cfg(test)]
+mod editor_tests;
