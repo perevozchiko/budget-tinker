@@ -125,7 +125,7 @@ impl Timeframe {
                 });
         }
         let mut changed = false;
-        egui::Popup::menu(&trigger)
+        let popup = egui::Popup::menu(&trigger)
             .open_bool(&mut self.open)
             .align(egui::emath::RectAlign::BOTTOM)
             .width(458.)
@@ -151,12 +151,6 @@ impl Timeframe {
             .show(|ui| {
                 ui.set_width(458.);
                 ui.spacing_mut().item_spacing = Vec2::ZERO;
-                let top = ui.cursor().top();
-                let x = trigger
-                    .rect
-                    .center()
-                    .x
-                    .clamp(ui.max_rect().left() + 15., ui.max_rect().right() - 15.);
                 band(ui, Color32::from_gray(232), 9, |ui| {
                     ui.label(RichText::new("Timeframe").size(18.).color(classic::TEXT));
                 });
@@ -253,26 +247,17 @@ impl Timeframe {
                         }
                     });
                 });
-                // The pointer extends beyond the popup's content clip rectangle.
-                let painter = ui.painter().with_clip_rect(ui.clip_rect().expand(18.));
-                painter.add(egui::Shape::convex_polygon(
-                    vec![
-                        egui::pos2(x - 17., top + 1.),
-                        egui::pos2(x, top - 16.),
-                        egui::pos2(x + 17., top + 1.),
-                    ],
-                    Color32::from_gray(232),
-                    Stroke::NONE,
-                ));
-                painter.line_segment(
-                    [egui::pos2(x - 17., top), egui::pos2(x, top - 16.)],
-                    Stroke::new(1_f32, Color32::WHITE),
-                );
-                painter.line_segment(
-                    [egui::pos2(x, top - 16.), egui::pos2(x + 17., top)],
-                    Stroke::new(1_f32, Color32::WHITE),
-                );
             });
+        if let Some(popup) = popup {
+            classic::popup_pointer(
+                &ui.ctx().layer_painter(popup.response.layer_id),
+                popup.response.rect,
+                trigger.rect.center().x,
+                trigger.rect.bottom() + 1.,
+                Color32::from_gray(232),
+                Stroke::new(1_f32, Color32::from_gray(174)),
+            );
+        }
         changed
     }
 }

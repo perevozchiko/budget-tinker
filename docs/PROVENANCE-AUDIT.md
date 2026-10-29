@@ -23,7 +23,7 @@ The license decision is recorded in LICENSE-STATUS.md; this provenance inventory
 - `src/icons.rs` draws UI symbols in code; no copied proprietary bitmap icon set found.
 - `assets/icon-artwork.png`: supplied project emblem, AI-assisted background edit at owner
   request. `assets/app-icon.png` and `.ico` are normalized/padded derivatives; .icns is
-  generated during bundling. The source, prompt and workflow are in ICON-EDIT.md.
+  generated during bundling. The source, edit specification and workflow are in ICON-EDIT.md.
 - `docs/screenshots/budgettinker.png`: real application window with synthetic demo values;
   the screenshot shows the running BudgetTinker application.
 - `locales/en.json`: existing local English labels; no external localization corpus cited.

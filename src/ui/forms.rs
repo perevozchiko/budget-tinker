@@ -1,5 +1,7 @@
 use super::*;
 
+mod account_settings;
+
 const ACCOUNT_TYPES: &[(&str, &str)] = &[
     ("checking", "Текущий счёт"),
     ("savings", "Сберегательный счёт"),
@@ -51,7 +53,7 @@ fn first_field_style(
         egui::TextEdit::singleline(value)
             .desired_width(width)
             .font(if compact {
-                crate::palette::bold(16.)
+                crate::palette::bold(13.)
             } else {
                 egui::FontId::proportional(13.)
             })
@@ -125,7 +127,7 @@ fn action_link(ui: &mut egui::Ui, label: &str, destructive: bool) -> bool {
             .add(
                 egui::Label::new(
                     RichText::new(i18n::tr(ui.ctx(), label))
-                        .size(14.)
+                        .size(12.)
                         .underline()
                         .color(color),
                 )
@@ -147,7 +149,7 @@ fn detail_header(ui: &mut egui::Ui, title: &str, width: f32, compact: bool) {
         .inner_margin(Margin::symmetric(20, 11))
         .show(ui, |ui| {
             ui.set_width(width - 40.);
-            ui.l_label(RichText::new(title).size(18.).color(INK));
+            ui.l_label(RichText::new(title).size(16.).color(INK));
         });
     ui.painter().hline(
         response.response.rect.x_range(),
@@ -201,12 +203,12 @@ fn detail_footer(
         Stroke::new(1_f32, Color32::from_gray(178)),
     );
 }
-fn category_dialog_button(ui: &mut egui::Ui, label: &str, primary: bool) -> egui::Response {
-    let (rect, response) = ui.allocate_exact_size(
-        Vec2::new(if primary { 52. } else { 60. }, 27.),
-        egui::Sense::click(),
-    );
-    let (top, bottom) = if primary {
+fn compact_dialog_button(ui: &mut egui::Ui, label: &str, primary: bool) -> egui::Response {
+    let (rect, response) = ui.allocate_exact_size(Vec2::new(60., 27.), egui::Sense::click());
+    response.widget_info(|| {
+        egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), label)
+    });
+    let (top, bottom) = if primary && ui.is_enabled() {
         (
             Color32::from_rgb(0, 151, 208),
             Color32::from_rgb(0, 67, 105),
@@ -244,30 +246,47 @@ fn category_dialog_button(ui: &mut egui::Ui, label: &str, primary: bool) -> egui
         rect.center(),
         egui::Align2::CENTER_CENTER,
         label,
-        crate::palette::bold(14.),
-        if primary { Color32::WHITE } else { INK },
+        if primary {
+            crate::palette::bold(13.)
+        } else {
+            FontId::proportional(13.)
+        },
+        if !ui.is_enabled() {
+            Color32::GRAY
+        } else if primary {
+            Color32::WHITE
+        } else {
+            INK
+        },
     );
+    if response.has_focus() {
+        ui.painter().rect_stroke(
+            rect.expand(1.),
+            4.,
+            Stroke::new(1_f32, Color32::from_rgb(0, 153, 204)),
+            egui::StrokeKind::Outside,
+        );
+    }
     response
 }
 
-fn popup_pointer(ctx: &egui::Context, pos: egui::Pos2, color: Color32) {
-    let painter = ctx.layer_painter(egui::LayerId::new(
-        egui::Order::Tooltip,
-        egui::Id::new("detail_popup_pointer"),
-    ));
-    painter.add(egui::Shape::convex_polygon(
-        vec![
-            egui::pos2(pos.x + 38., pos.y + 1.),
-            egui::pos2(pos.x + 64., pos.y + 1.),
-            egui::pos2(pos.x + 51., pos.y - 12.),
-        ],
+fn popup_pointer(response: &egui::Response, color: Color32, border: Color32) {
+    classic::popup_pointer(
+        &response.ctx.layer_painter(response.layer_id),
+        response.rect,
+        response.rect.left() + 51.,
+        response.rect.top() - 13.,
         color,
-        Stroke::new(1_f32, Color32::from_gray(178)),
-    ));
+        Stroke::new(1_f32, border),
+    );
 }
 
 impl App {
     pub(super) fn detail_form(&mut self, ctx: &egui::Context, mut d: Dialog) {
+        if matches!(d.kind, DialogKind::AccountSettings(_)) {
+            self.account_settings_form(ctx, d);
+            return;
+        }
         if matches!(d.kind, DialogKind::Note(_)) {
             self.note_form(ctx, d);
             return;
@@ -306,7 +325,6 @@ impl App {
         let mut save = false;
         let mut cancel = false;
         let mut visibility_action = false;
-        let mut next = None;
         let mut pointer = None;
         let mut modal = chrome::modal(ctx, "dialog");
         if compact {
@@ -338,36 +356,6 @@ impl App {
             detail_body(ui, width, compact, |ui| {
                 ui.spacing_mut().item_spacing.y = if compact { 6. } else { 9. };
                 match &d.kind {
-                    DialogKind::AccountSettings(a) => {
-                        let account = self.b.account(a).expect("existing account");
-                        ui.l_label(RichText::new("Название:").strong());
-                        first_field(ui, &mut d.fields[0], &mut d.focus, width - 56.);
-                        ui.l_label("Заметка:");
-                        ui.add(egui::TextEdit::multiline(&mut d.fields[2]).desired_width(width - 56.).desired_rows(3));
-                        ui.l_label("Тип:");
-                        account_type(ui, &mut d.fields[1], 330.);
-                        ui.add_space(4.);
-                        ui.separator();
-                        ui.l_checkbox(&mut d.second, "Включать в бюджет");
-                        if d.second != account.on_budget {
-                            ui.l_label(RichText::new("Изменение учёта счёта пересчитает бюджет и расходы по всей его истории.").size(12.).color(RED));
-                        }
-                        let balance = self.b.balance(a, None, false);
-                        ui.horizontal(|ui| {
-                            ui.l_label("Текущий остаток:");
-                            ui.label(RichText::new(i18n::money(balance, &account.currency)).strong());
-                        });
-                        if ui.add_enabled(!account.closed, classic::Button::new("Скорректировать остаток…")).clicked() {
-                            next = Some(DialogKind::AdjustBalance(a.clone()));
-                        }
-                        ui.separator();
-                        ui.add_enabled_ui(account.closed || balance == 0, |ui| {
-                            ui.l_checkbox(&mut d.check, "Закрыть счёт с нулевым остатком");
-                        });
-                        if !account.closed && balance != 0 {
-                            ui.l_label(RichText::new("Для закрытия счёта его остаток должен быть нулевым").size(11.).color(Color32::GRAY));
-                        }
-                    }
                     DialogKind::Reconcile(a) => {
                         let account = self.b.account(a).expect("existing account");
                         ui.l_label("Enter the balance from your account website or paper statement to begin reconciling.");
@@ -457,16 +445,20 @@ impl App {
                 };
                 let label = match d.kind { DialogKind::Reconcile(_) => "Begin Reconciliation", DialogKind::AdjustBalance(_) => "Adjust Balance", DialogKind::EditCategory(_) | DialogKind::EditGroup(_) => "Готово", _ => "Сохранить" };
                 if compact {
-                    if ui.add_enabled_ui(enabled, |ui| category_dialog_button(ui, "Done", true)).inner.clicked() { save = true; }
-                    if category_dialog_button(ui, "Cancel", false).clicked() { cancel = true; }
+                    if ui.add_enabled_ui(enabled, |ui| compact_dialog_button(ui, "Done", true)).inner.clicked() { save = true; }
+                    if compact_dialog_button(ui, "Cancel", false).clicked() { cancel = true; }
                 } else {
                     if ui.add_enabled(enabled, classic::Button::new(label).primary()).clicked() { save = true; }
                     if classic::button(ui, "Отмена").clicked() { cancel = true; }
                 }
             });
         });
-        if let Some(pos) = pointer {
-            popup_pointer(ctx, pos, Color32::from_gray(232));
+        if pointer.is_some() {
+            popup_pointer(
+                &response.response,
+                Color32::from_gray(232),
+                Color32::from_gray(178),
+            );
         }
         if visibility_action {
             match &d.kind {
@@ -498,11 +490,6 @@ impl App {
         }
         if cancel || response.should_close() {
             self.dialog = d.parent.map(|parent| *parent);
-            return;
-        }
-        if let Some(next) = next {
-            self.open(next);
-            self.dialog.as_mut().expect("new dialog").parent = Some(Box::new(d));
             return;
         }
         if save {
@@ -597,28 +584,23 @@ impl App {
                             delete = true;
                         }
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                            if ui
-                                .add(
-                                    classic::Button::new("Готово")
-                                        .icon(classic::Glyph::Check)
-                                        .success(),
-                                )
-                                .clicked()
-                            {
+                            ui.spacing_mut().item_spacing.x = 12.;
+                            if compact_dialog_button(ui, "Done", true).clicked() {
                                 save = true;
                             }
-                            if ui
-                                .add(classic::Button::new("Отмена").icon(classic::Glyph::Cancel))
-                                .clicked()
-                            {
+                            if compact_dialog_button(ui, "Cancel", false).clicked() {
                                 cancel = true;
                             }
                         });
                     });
                 });
         });
-        if let Some(pos) = pointer {
-            popup_pointer(ctx, pos, Color32::from_gray(235));
+        if pointer.is_some() {
+            popup_pointer(
+                &response.response,
+                Color32::from_gray(235),
+                Color32::from_gray(173),
+            );
         }
         if cancel || response.should_close() {
             self.dialog = None;
