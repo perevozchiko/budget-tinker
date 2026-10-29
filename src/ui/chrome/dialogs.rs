@@ -78,7 +78,11 @@ impl App {
                             crate::icons::draw(ui.painter(), r.shrink(10.), 0, crate::palette::LIME);
                             ui.vertical(|ui| {
                                 ui.l_label(RichText::new("BudgetTinker").font(crate::palette::bold(18.)).color(GREEN));
-                                ui.l_label(format!("Версия: {}", env!("CARGO_PKG_VERSION")));
+                                ui.l_label(format!(
+                                    "Версия: {} - {}",
+                                    env!("CARGO_PKG_VERSION"),
+                                    env!("BUDGETTINKER_GIT_SHA"),
+                                ));
                                 ui.l_label("Локальное приложение для ведения бюджета.");
                                 ui.add_space(12.);
                                 ui.l_label("Локальное планирование бюджета на Rust и egui.");
@@ -90,11 +94,11 @@ impl App {
                         if ui.l_checkbox(&mut self.preferences.diagnostics, "Включить режим диагностики").changed() { self.save_preferences(); }
                     }
                     Overlay::Technical => {
-                        ui.l_label(format!("BudgetTinker {} · {} / {}", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH));
+                        ui.l_label(format!("BudgetTinker {} - {} · {} / {}", env!("CARGO_PKG_VERSION"), env!("BUDGETTINKER_GIT_SHA"), std::env::consts::OS, std::env::consts::ARCH));
                         ui.l_label(format!("Счетов: {} · Категорий: {} · Операций: {}", self.b.accounts.len(), self.b.categories.len(), self.b.transactions.len()));
                         ui.l_label("Хранилище: SQLite · автоматическое сохранение · 100 версий");
                         ui.label(self.store.path.display().to_string());
-                        if classic::button(ui, "Скопировать информацию").clicked() { ctx.copy_text(format!("BudgetTinker {}\n{} / {}\n{}", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH, self.store.path.display())); }
+                        if classic::button(ui, "Скопировать информацию").clicked() { ctx.copy_text(format!("BudgetTinker {} - {}\n{} / {}\n{}", env!("CARGO_PKG_VERSION"), env!("BUDGETTINKER_GIT_SHA"), std::env::consts::OS, std::env::consts::ARCH, self.store.path.display())); }
                     }
                     Overlay::Help(topic) => {
                         let (heading, content) = match topic.as_str() {

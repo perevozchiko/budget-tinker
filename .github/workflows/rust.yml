@@ -1,8 +1,11 @@
 name: Rust checks and desktop builds
 
-# Start this workflow only via Actions -> Run workflow.
-# Commits and pull requests must not trigger release builds.
+# Every commit to master (including merged pull requests) builds all platforms.
+# Other branches are built only via Actions -> Run workflow.
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       platform:
@@ -86,7 +89,7 @@ jobs:
           if-no-files-found: warn
 
   build:
-    if: ${{ inputs.platform == 'all' || inputs.platform == 'macos' }}
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'macos' }}
     name: Build macOS application
     runs-on: macos-15
     timeout-minutes: 60
@@ -114,7 +117,7 @@ jobs:
           if-no-files-found: error
 
   linux:
-    if: ${{ inputs.platform == 'all' || inputs.platform == 'linux' }}
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'linux' }}
     name: Linux x86_64 release
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -150,7 +153,7 @@ jobs:
           if-no-files-found: error
 
   windows:
-    if: ${{ inputs.platform == 'all' || inputs.platform == 'windows' }}
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == 'windows' }}
     name: Windows x86_64 release
     runs-on: windows-2022
     timeout-minutes: 60
