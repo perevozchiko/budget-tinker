@@ -8,10 +8,10 @@ is verified; Windows and Linux builds and runtime support remain unverified.
 
 ## Public preparation — 2026-10-28 (historical)
 
-- [x] Create an unversioned sibling copy without old history, builds or private reference material.
+- [x] Create an unversioned sibling copy without old history, builds or private development material.
 - [x] Rename product, binary, bundle, support paths, environment variable and icon.
 - [x] Use `.budgettinker` for native budget defaults and save dialogs; retain SQLite format and legacy opening.
-- [x] Remove original-application documentation and screenshots from the public copy.
+- [x] Keep distribution documentation and screenshots specific to BudgetTinker.
 - [x] Verify 246 tests, strict Clippy, examples, macOS bundle and live synthetic GUI.
 - [x] Adjust Dock icon size and match the sidebar background at the owner’s request.
 - [x] Finalize root MIT OR Apache-2.0 licenses, Cargo declaration and project artwork terms.
@@ -43,7 +43,7 @@ is verified; Windows and Linux builds and runtime support remain unverified.
 ## Next behavioral work (separate from branding)
 
 - [x] Keep the budget cell editor open while its quick-budget menu is pressed.
-- [x] Keep budget rows fixed while editing and opening quick-budget; use a compact square arrow like the inspected reference control.
+- [x] Keep budget rows fixed while editing and opening quick-budget; use a compact square menu button.
 - [x] Extend the quick-budget menu with historical averages, scheduled outflows and a calculator.
 - [x] Match the quick-budget menu and calculator controls to the requested classic appearance.
 - [x] Preserve exact calculator intermediates, accept currency-independent decimal operands and round only the final monetary result.

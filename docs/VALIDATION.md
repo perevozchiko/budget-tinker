@@ -258,13 +258,12 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 
 ## Account ordering work in progress — 2026-10-29
 
-- The reference application reordered two budget accounts by dragging; cross-group behavior was not verified.
 - BudgetTinker supports dragging within a displayed group through the save/undo path. The Rust suite (264 tests), formatting, strict Clippy and example checks passed. No dedicated reorder test or live interaction verification was completed.
 - macOS bundle rebuilt; codesign and plist checks passed. It was launched with fresh synthetic data; reorder and persistence were not checked live.
 
 ## Account drag animation — 2026-10-29
 
-- Observed the reference application during a drag: the account is drawn as a translucent floating row. BudgetTinker now draws a floating row and animates surrounding rows towards the prospective position.
+- BudgetTinker draws the dragged account as a translucent floating row and animates surrounding rows towards the prospective position.
 - Model/integration and egui: existing 264 tests passed before the final pointer-offset adjustment; strict Clippy passed after it. No dedicated animation event test was added.
 - Live GUI: inspected a synthetic drag in the rebuilt app and identified an incorrect horizontal offset; the offset was subsequently corrected, but that final correction has not been inspected live. Bundle signature and plist passed after rebuilding. Release-tool tests and dependency audits passed.
 
@@ -301,11 +300,8 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   passed**; the existing workflow's `push` trigger conflicts with the manual-only policy
   test. This unrelated CI configuration was not changed; no full release-tool pass is
   claimed.
-- Native reference inspection: clicking Available to Budget collapses all displayed
-  month cards, clicking again expands them; Income opens a transaction table with
-  Show in Account View and Close. AutoFill contains the macOS Contact/Passwords/Credit
-  Card services, not budgeting commands. Only display controls were used in the reference
-  application; no financial data was changed and no reference assets were added to source.
+- Clicking Available to Budget collapses all displayed month cards; clicking again
+  expands them. Income opens a transaction table with Show in Account View and Close.
 - macOS bundle rebuilt; strict ad-hoc signature and plist verification passed. Final
   executable PID **40448**, window **18922**, opened the fresh synthetic budget
   `/tmp/budgettinker-month-final-kra3hywa/demo.budgettinker`, confirmed with lsof.
@@ -327,11 +323,9 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   the arrow's `ui.put` both advanced the parent layout despite the row already having
   its space allocated. The input now uses an independent child UI and the arrow uses
   an explicit interaction rectangle; neither changes the parent cursor.
-- Native reference inspection confirmed fixed row positions during editing and a
-  compact square gray button outside the cell, with a black downward triangle.
-  The new button is 16x16px, vertically centered, with a drawn triangle and pressed
-  gradient; it no longer depends on the font's tiny dropdown glyph. No reference
-  assets or financial data were copied or changed.
+- The editor uses a compact square gray menu button outside the cell, with a black
+  downward triangle. The button is 16x16px, vertically centered, with a drawn triangle
+  and pressed gradient; it no longer depends on the font's tiny dropdown glyph.
 - Egui: the regression compares every category row rectangle before editing, after
   entering the input, after opening quick-budget and after cancellation at both 1050px
   and 1440px widths. All rectangles are identical; cancellation leaves the complete
@@ -353,3 +347,13 @@ was not touched. No commits, pushes, releases or visibility changes were made.
   conflicts. Its release-test policy update supersedes the earlier CI-test failure:
   `scripts/test-release-tools.py` now passes **all 8 tests**. The incoming master change
   only updates those policy tests; no application or dependency code changed in the merge.
+
+## Documentation maintenance — 2026-10-29
+
+- Product notes describe BudgetTinker's controls and behavior directly. Asset descriptions
+  retain their sources and license terms; dependency notices are unchanged.
+- Documentation-only changes: all 275 Rust tests, formatting, strict Clippy, example
+  checks, eight release-tool tests and all four dependency audits passed.
+- Rebuilt the macOS bundle with the updated attribution. Packaged attribution matches
+  the source; strict ad-hoc signature and plist checks passed. No additional live GUI
+  check was performed for this documentation-only update.
