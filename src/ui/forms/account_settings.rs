@@ -140,8 +140,12 @@ impl App {
             );
         });
         remember_rect(ctx, "popup", response.response.rect);
-        if let Some(pos) = pointer {
-            popup_pointer(ctx, pos, Color32::from_gray(232));
+        if pointer.is_some() {
+            popup_pointer(
+                &response.response,
+                Color32::from_gray(232),
+                Color32::from_gray(178),
+            );
         }
         if cancel || response.should_close() {
             return;

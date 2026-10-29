@@ -81,3 +81,8 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 ## Documentation wording — 2026-10-29
 
 - [x] Describe icon adjustments and the application palette directly while retaining asset provenance and licensing records.
+
+## Popup chrome follow-up — 2026-10-29
+
+- [x] Share rounded, seamless pointer rendering across anchored account/category/group/note dialogs, hidden categories and the register timeframe popup.
+- [x] Give category/group/note dialogs consistent 60×27 Cancel/Done buttons, smaller control text and matching alignment; retain account-specific green Done styling.
