@@ -28,7 +28,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -53,7 +53,7 @@ jobs:
       # cargo-deny 0.20.2 uses this stable cache directory for the official DB URL.
       # Fetch via GitHub Actions so cargo-deny's git CLI does not need to refetch main.
       - name: Check out fresh official RustSec advisory database
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: RustSec/advisory-db
           ref: main
@@ -80,7 +80,7 @@ jobs:
           python3 scripts/audit-dependencies.py --offline
       - name: Upload dependency audit diagnostics on failure
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: BudgetTinker-dependency-audit-diagnostics
           path: |
@@ -94,9 +94,12 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Versioned package name
+        id: package
+        run: python3 scripts/ci-artifact-name.py macOS
       - name: Build app bundle
         run: bash scripts/bundle.sh
       - name: Verify macOS app bundle
@@ -108,12 +111,12 @@ jobs:
           codesign --verify --deep --strict --verbose=2 dist/BudgetTinker.app
           file dist/BudgetTinker.app/Contents/MacOS/budgettinker
       - name: Zip app bundle
-        run: ditto -c -k --sequesterRsrc --keepParent dist/BudgetTinker.app BudgetTinker-macOS.zip
+        run: ditto -c -k --sequesterRsrc --keepParent dist/BudgetTinker.app "${{ steps.package.outputs.stem }}.zip"
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: BudgetTinker-macOS
-          path: BudgetTinker-macOS.zip
+          name: ${{ steps.package.outputs.stem }}
+          path: ${{ steps.package.outputs.stem }}.zip
           if-no-files-found: error
 
   linux:
@@ -122,7 +125,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install native Linux build dependencies
         run: |
           sudo apt-get update
@@ -131,6 +134,9 @@ jobs:
             libxkbcommon-dev libwayland-dev libgl1-mesa-dev libdbus-1-dev
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Versioned package name
+        id: package
+        run: python3 scripts/ci-artifact-name.py linux-x86_64
       - name: Build Linux executable
         run: cargo build --release --locked
       - name: Verify and package Linux executable
@@ -145,11 +151,11 @@ jobs:
             exit 1
           fi
           python3 scripts/stage-notices.py target/package/Notices
-          tar -czf BudgetTinker-linux-x86_64.tar.gz -C target/release budgettinker -C "$PWD/target/package" Notices
-      - uses: actions/upload-artifact@v4
+          tar -czf "${{ steps.package.outputs.stem }}.tar.gz" -C target/release budgettinker -C "$PWD/target/package" Notices
+      - uses: actions/upload-artifact@v6
         with:
-          name: BudgetTinker-linux-x86_64
-          path: BudgetTinker-linux-x86_64.tar.gz
+          name: ${{ steps.package.outputs.stem }}
+          path: ${{ steps.package.outputs.stem }}.tar.gz
           if-no-files-found: error
 
   windows:
@@ -158,9 +164,12 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Versioned package name
+        id: package
+        run: python scripts/ci-artifact-name.py windows-x86_64
       - name: Build Windows executable
         run: cargo build --release --locked
       - name: Verify and package Windows executable
@@ -176,9 +185,9 @@ jobs:
           }
           python scripts/stage-notices.py target/package/Notices
           if ($LASTEXITCODE -ne 0) { throw "Notice staging failed" }
-          Compress-Archive -Path $bin, "target/package/Notices" -DestinationPath "BudgetTinker-windows-x86_64.zip" -Force
-      - uses: actions/upload-artifact@v4
+          Compress-Archive -Path $bin, "target/package/Notices" -DestinationPath "${{ steps.package.outputs.stem }}.zip" -Force
+      - uses: actions/upload-artifact@v6
         with:
-          name: BudgetTinker-windows-x86_64
-          path: BudgetTinker-windows-x86_64.zip
+          name: ${{ steps.package.outputs.stem }}
+          path: ${{ steps.package.outputs.stem }}.zip
           if-no-files-found: error
