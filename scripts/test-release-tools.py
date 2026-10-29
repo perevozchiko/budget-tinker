@@ -69,7 +69,7 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = (ROOT / '.github/workflows/rust.yml').read_text()
         self.assertRegex(
             workflow,
-            r"(?m)^on:\n  push:\n    branches:\n      - master\n    tags:\n      - 'v\\*'\n  workflow_dispatch:\n",
+            r"(?m)^on:\n  push:\n    branches:\n      - master\n    tags:\n      - 'v\*'\n  workflow_dispatch:\n",
         )
         self.assertNotIn('  pull_request:', workflow)
         self.assertIn('        default: all', workflow)
@@ -86,7 +86,7 @@ class ReleasePolicyTests(unittest.TestCase):
         workflow = (ROOT / '.github/workflows/rust.yml').read_text()
         self.assertNotIn('actions/checkout@v4', workflow)
         self.assertNotIn('actions/upload-artifact@v4', workflow)
-        self.assertEqual(workflow.count('actions/checkout@v6'), 5)
+        self.assertEqual(workflow.count('actions/checkout@v6'), 6)
         self.assertEqual(workflow.count('actions/upload-artifact@v6'), 4)
         self.assertEqual(workflow.count('scripts/ci-artifact-name.py'), 3)
         self.assertEqual(workflow.count('name: ${{ steps.package.outputs.stem }}'), 3)
