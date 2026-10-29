@@ -74,6 +74,64 @@ impl Transaction {
 }
 
 impl Budget {
+    /// Frozen base-currency income contributions, including split income and deferrals.
+    pub fn income_rows(&self, month: &str) -> Result<Vec<(&Transaction, i64)>> {
+        if !valid_month(month) {
+            return Err("Invalid month".into());
+        }
+        let mut rows = Vec::new();
+        for t in &self.transactions {
+            if let Some(value) = self.income_contribution(t, month)? {
+                rows.push((t, value));
+            }
+        }
+        rows.sort_by(|(a, _), (b, _)| a.date.cmp(&b.date).then(a.id.cmp(&b.id)));
+        Ok(rows)
+    }
+
+    pub fn income_contribution(&self, t: &Transaction, month: &str) -> Result<Option<i64>> {
+        if !valid_month(month) {
+            return Err("Invalid month".into());
+        }
+        if !self.account(&t.account)?.on_budget {
+            return Ok(None);
+        }
+        Ok(if t.splits.is_empty() {
+            let external = t.transfer.as_ref().is_none_or(|link| {
+                self.transactions.iter().any(|peer| {
+                    peer.id != t.id
+                        && peer.transfer.as_ref() == Some(link)
+                        && self.account(&peer.account).is_ok_and(|a| !a.on_budget)
+                })
+            });
+            if t.category.is_none()
+                && (external || t.income_month.is_some())
+                && t.income_month.as_deref().unwrap_or(&t.date[..7]) == month
+            {
+                Some(t.base_amount)
+            } else {
+                None
+            }
+        } else {
+            let values = self.split_base_amounts(t)?;
+            let parts: Vec<_> = t
+                .splits
+                .iter()
+                .zip(values)
+                .filter(|(part, _)| {
+                    part.category.is_none()
+                        && self.split_has_category_flow(t, part)
+                        && part.income_month.as_deref().unwrap_or(&t.date[..7]) == month
+                })
+                .collect();
+            if parts.is_empty() {
+                None
+            } else {
+                Some(parts.iter().map(|(_, value)| value).sum())
+            }
+        })
+    }
+
     /// Hold only the frozen base value; exchange revaluation keeps its existing timing.
     pub fn deferred_income(&self, month: &str) -> i64 {
         self.transactions

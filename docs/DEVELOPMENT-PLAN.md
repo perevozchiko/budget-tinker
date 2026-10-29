@@ -47,6 +47,9 @@ is verified; Windows and Linux builds and runtime support remain unverified.
 - [x] Match the quick-budget menu and calculator controls to the requested classic appearance.
 - [x] Preserve exact calculator intermediates, accept currency-independent decimal operands and round only the final monetary result.
 - [x] Verify each quick-budget choice against computed amounts and the resulting allocation.
+- [x] Implement all seven month-level quick-budget commands; preserve filled cells, apply atomically and verify SQLite Undo/Redo.
+- [x] Toggle all month summary details by clicking Available to Budget and persist the display preference.
+- [x] Open month income details with deferred/split income and exact-month Account View navigation.
 - Explicit Uncategorized state for imported bank inflows, with old-document compatibility.
 - Performance checks at 3,000–30,000 transactions and large payee/category lists.
 - Cross-platform native file dialogs and platform helper support.

@@ -3,6 +3,16 @@ use super::*;
 impl Budget {
     /// Up to twelve complete months, starting with the first recorded budget activity.
     pub fn average_category_outflow(&self, month: &str, category: &str) -> (i64, usize) {
+        self.average_category_outflow_over(month, category, 12)
+    }
+
+    /// Average over available complete months, capped at `limit` (1–12).
+    pub fn average_category_outflow_over(
+        &self,
+        month: &str,
+        category: &str,
+        limit: usize,
+    ) -> (i64, usize) {
         let first = self
             .transactions
             .iter()
@@ -15,8 +25,8 @@ impl Budget {
             .filter(|m| *m < month)
             .min();
         let Some(first) = first else { return (0, 0) };
-        let months: Vec<_> = (1..=12)
-            .map(|n| month_shift(month, -n))
+        let months: Vec<_> = (1..=limit.clamp(1, 12))
+            .map(|n| month_shift(month, -(n as i32)))
             .take_while(|m| m.as_str() >= first)
             .collect();
         let total: i128 = months

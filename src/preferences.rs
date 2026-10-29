@@ -10,6 +10,7 @@ use std::{
 pub struct Preferences {
     pub language: Language,
     pub budget_collapsed: bool,
+    pub budget_summary_collapsed: bool,
     pub sidebar_compact: bool,
     pub off_budget_collapsed: bool,
     pub closed_collapsed: bool,
@@ -56,6 +57,7 @@ impl Default for Preferences {
         Self {
             language: Language::En,
             budget_collapsed: false,
+            budget_summary_collapsed: false,
             sidebar_compact: false,
             off_budget_collapsed: false,
             closed_collapsed: false,
@@ -177,6 +179,7 @@ mod tests {
     #[test]
     fn scheduled_height_loads_old_preferences_and_preserves_user_preference() {
         let old: Preferences = serde_json::from_str("{}").unwrap();
+        assert!(!old.budget_summary_collapsed);
         assert_eq!(old.scheduled_panel_height, 280.);
         let mut prefs = Preferences {
             scheduled_panel_height: 400.,

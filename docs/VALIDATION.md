@@ -274,3 +274,48 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Removed three legacy brand mentions from documentation. Case-insensitive searches of all source-tree text (including hidden/ignored files, excluding Git metadata and generated target/dist output) found no remaining contiguous short or expanded brand names; separator variants were checked too.
 - Model/integration and egui: all 264 existing Rust tests passed (5 library, 109 binary/egui, 150 integration). No dedicated drag regression event test was added. Formatting, strict all-target Clippy and example checks passed; seven release-tool tests and all four dependency audits passed with the existing scoped exception.
 - macOS bundle rebuilt; strict signature and plist checks passed. Rebuilt app PID 81741 / window 18068 was visually inspected with fresh synthetic `/tmp/budgettinker-drop-j5ftdy8_/demo.budgettinker`, confirmed by lsof. Screenshot is under target/drop-fix-window.png. This checks launch/appearance only; scrolling drag behavior and persistence were not exercised live.
+
+## Month quick-budget menu and summary interactions — 2026-10-29
+
+- The month menu previously only copied the preceding month and overwrote filled cells.
+  It now offers previous allocations, previous net outflows, averages over up to three
+  or twelve complete months, scheduled outflows, zero category balance and zero allocations.
+  The first six commands fill only zero-valued allocations (including stored zeros and
+  hidden categories); zero allocations replaces every category's amount for that month.
+  All values are computed before mutation, so missing scheduled exchange rates cannot
+  leave a partially filled month. The existing commit path saves the whole change once.
+- Model/integration: new regressions cover the three-month history cap, empty months,
+  integer rounding, allocation-only history, invalid month rejection and atomic failure
+  on a missing scheduled rate. Income details cover deferred income, split income,
+  off-budget exclusion, internal transfers and frozen foreign-currency amounts. Currency
+  revaluation is shown separately from categorized income, matching the card's total.
+- Egui: actual pointer events open the month popup and select each of its seven entries;
+  each test checks allocation results, positive/negative filled-cell preservation, hidden
+  categories, SQLite persistence and a single Undo/Redo restoring the complete document.
+  Further event tests check missing-rate errors without persistence/Undo changes, global
+  summary collapse/expand and saved preferences, income popup opening and exact-month
+  Account View filtering (including income received in the previous month).
+- All **274 Rust tests** passed: 5 library, 113 binary/egui and 156 integration tests.
+  Formatting, strict all-target Clippy and example checks passed. All four dependency
+  audits passed with the existing scoped advisory exception. Release-tool tests: **6/7
+  passed**; the existing workflow's `push` trigger conflicts with the manual-only policy
+  test. This unrelated CI configuration was not changed; no full release-tool pass is
+  claimed.
+- Native reference inspection: clicking Available to Budget collapses all displayed
+  month cards, clicking again expands them; Income opens a transaction table with
+  Show in Account View and Close. AutoFill contains the macOS Contact/Passwords/Credit
+  Card services, not budgeting commands. Only display controls were used in the reference
+  application; no financial data was changed and no reference assets were added to source.
+- macOS bundle rebuilt; strict ad-hoc signature and plist verification passed. Final
+  executable PID **40448**, window **18922**, opened the fresh synthetic budget
+  `/tmp/budgettinker-month-final-kra3hywa/demo.budgettinker`, confirmed with lsof.
+  Live month-menu checks compare every category allocation through read-only SQLite:
+  November totals are 266500 (previous budget), 100752 (previous outflows and both
+  available-history averages), 2990 (scheduled), -165748 (zero balance), and 0 (zero
+  allocations), in minor units. Each command is undone through the native shortcut;
+  the complete stored document must equal the original synthetic document afterwards.
+  GUI scripts, results and synthetic screenshots remain under `target/month-menu/`.
+- Final bundle appearance: inspected collapsed cards and the income table, then used
+  Show in Account View to display the three synthetic income rows totaling 512600 minor
+  units. Complete SQLite document equality with the original synthetic budget passed
+  after all seven menu commands plus Undo, collapse/expand and income navigation.

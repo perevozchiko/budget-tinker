@@ -647,3 +647,7 @@ impl App {
 
 mod navigation;
 mod summary;
+
+mod quick_menu;
+
+mod income_popup;
