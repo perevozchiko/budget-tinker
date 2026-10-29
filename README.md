@@ -70,8 +70,23 @@ The app bundle and executable names inside archives remain unchanged.
 
 ### Publishing a GitHub Release
 
-Cargo.toml is the source of truth for the version. After completing a batch of changes,
-update Cargo.toml and Cargo.lock together using:
+**One-click release:** open **Actions → Release → Run workflow**, select the
+`master` branch, and choose the version change (**Current, Patch, Minor,
+Major**) and stage (**Alpha, Beta, RC, Stable**). For example, Current + Alpha
+after `v0.1.0-alpha.3` creates `v0.1.0-alpha.4`. Current + Beta switches to
+`v0.1.0-beta.1`. Minor + RC targets `v0.2.0-rc.1`.
+
+The Release workflow calculates the next available version using Cargo and
+existing tags, commits updates to both Cargo files if necessary, and directly
+runs the full Rust checks and three desktop builds. It creates the tag and
+GitHub Release only after every check passes. A failed build may leave a
+version commit in master but cannot publish an untested release; retrying the
+same stage reuses the as-yet-untagged version. GitHub Actions uses GITHUB_TOKEN
+(no personal access token). Regular merges to master still build only and do
+not create releases.
+
+**Manual fallback:** Cargo.toml is the source of truth for the version. You
+can still update Cargo.toml and Cargo.lock together using:
 
 ```sh
 python3 scripts/bump-version.py 0.1.0-alpha.3
@@ -92,7 +107,7 @@ and Linux x64. When all jobs pass, GitHub publishes a release titled
 versioned archives. Tags must match the package version and point to a commit in `master`;
 mismatches fail CI without publishing a release. Versions containing a prerelease
 suffix (e.g. `-alpha.3`) are marked as pre-releases. Ordinary commits to
-`master` do not publish releases. The tag is not created automatically.
+`master` do not publish releases. In the manual fallback you create the tag yourself; the one-click workflow creates it only after successful builds.
 
 Release notes are generated automatically from merged pull requests using
 [`.github/release.yml`](.github/release.yml). Add a label to each PR to group it:
