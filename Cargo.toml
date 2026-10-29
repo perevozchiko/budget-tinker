@@ -1,6 +1,6 @@
 [package]
 name = "budgettinker"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 edition = "2024"
 description = "Local-first desktop envelope budgeting"
 repository = "https://github.com/perevozchiko/budget-tinker"
