@@ -59,3 +59,11 @@ See PUBLIC-RELEASE-AUDIT.md for verification and release blockers.
 - [x] Permit Git checkouts in source audits while excluding Git metadata from review ZIPs.
 - [x] Add manual CI platform selection and update private repository status documentation.
 - [ ] Run and test Windows/Linux platform builds before claiming platform support.
+
+## Account ordering follow-up
+
+- [ ] Verify sidebar dragging, persistence and Undo/Redo in egui and live GUI; define cross-group behavior.
+
+- [ ] Inspect the final account drag offset live and verify animation and persistence with dedicated egui interaction coverage.
+
+- [x] Restrict account drop targets to the visible scroll clip and remove legacy brand references from project documentation.

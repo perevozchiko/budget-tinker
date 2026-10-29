@@ -255,3 +255,22 @@ was not touched. No commits, pushes, releases or visibility changes were made.
 - Fast-forwarded to `21c2f5b` (`0.1.0-alpha.1`) while preserving the quick-budget/calculator changes.
 - All **264 Rust tests** passed (5 library, 109 binary/egui, 150 integration). Formatting, strict all-target Clippy and example checks passed. Seven release-tool tests and all four dependency audits passed with the existing scoped advisory exception.
 - Live GUI/bundle evidence above predates this version-only pull; no additional live GUI acceptance is claimed here.
+
+## Account ordering work in progress — 2026-10-29
+
+- The reference application reordered two budget accounts by dragging; cross-group behavior was not verified.
+- BudgetTinker supports dragging within a displayed group through the save/undo path. The Rust suite (264 tests), formatting, strict Clippy and example checks passed. No dedicated reorder test or live interaction verification was completed.
+- macOS bundle rebuilt; codesign and plist checks passed. It was launched with fresh synthetic data; reorder and persistence were not checked live.
+
+## Account drag animation — 2026-10-29
+
+- Observed the reference application during a drag: the account is drawn as a translucent floating row. BudgetTinker now draws a floating row and animates surrounding rows towards the prospective position.
+- Model/integration and egui: existing 264 tests passed before the final pointer-offset adjustment; strict Clippy passed after it. No dedicated animation event test was added.
+- Live GUI: inspected a synthetic drag in the rebuilt app and identified an incorrect horizontal offset; the offset was subsequently corrected, but that final correction has not been inspected live. Bundle signature and plist passed after rebuilding. Release-tool tests and dependency audits passed.
+
+## Account drop clipping review fix — 2026-10-29
+
+- Drop targets now require the pointer inside both the account row and the scroll UI clip rectangle, preventing hidden rows from accepting drops over controls below the list.
+- Removed three legacy brand mentions from documentation. Case-insensitive searches of all source-tree text (including hidden/ignored files, excluding Git metadata and generated target/dist output) found no remaining contiguous short or expanded brand names; separator variants were checked too.
+- Model/integration and egui: all 264 existing Rust tests passed (5 library, 109 binary/egui, 150 integration). No dedicated drag regression event test was added. Formatting, strict all-target Clippy and example checks passed; seven release-tool tests and all four dependency audits passed with the existing scoped exception.
+- macOS bundle rebuilt; strict signature and plist checks passed. Rebuilt app PID 81741 / window 18068 was visually inspected with fresh synthetic `/tmp/budgettinker-drop-j5ftdy8_/demo.budgettinker`, confirmed by lsof. Screenshot is under target/drop-fix-window.png. This checks launch/appearance only; scrolling drag behavior and persistence were not exercised live.
