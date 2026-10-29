@@ -54,16 +54,30 @@ class ReleasePolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unapproved direct dependers'):
             deps.verify_advisory_scope(metadata, datetime.date(2026, 10, 28))
 
-    def test_manual_ci_fetches_rustsec_before_offline_audit(self):
+    def test_ci_fetches_rustsec_before_offline_audit(self):
         workflow = (ROOT / '.github/workflows/rust.yml').read_text()
         self.assertIn('repository: RustSec/advisory-db', workflow)
         self.assertIn('ref: main', workflow)
         self.assertIn('path: target/release-audit/advisory-dbs/advisory-db-3157b0e258782691', workflow)
         self.assertIn('persist-credentials: false', workflow)
         self.assertIn('python3 scripts/audit-dependencies.py --offline', workflow)
-        self.assertIn('  workflow_dispatch:', workflow)
-        self.assertNotIn('  push:', workflow)
+
+    def test_ci_auto_builds_only_master_and_supports_manual_platforms(self):
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertRegex(
+            workflow,
+            r'(?m)^on:\n  push:\n    branches:\n      - master\n  workflow_dispatch:\n',
+        )
         self.assertNotIn('  pull_request:', workflow)
+        self.assertIn('        default: all', workflow)
+        for platform in ('all', 'macos', 'linux', 'windows'):
+            self.assertIn(f'          - {platform}\n', workflow)
+        for platform in ('macos', 'linux', 'windows'):
+            self.assertIn(
+                "if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == '" +
+                platform + "' }}",
+                workflow,
+            )
 
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
         for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:
