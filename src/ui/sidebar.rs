@@ -331,10 +331,10 @@ impl App {
                                         matches!(&dialog.kind, DialogKind::AccountSettings(id) if id == &account.id)
                                             || dialog.parent.as_ref().is_some_and(|parent| matches!(&parent.kind, DialogKind::AccountSettings(id) if id == &account.id))
                                     });
-                                    let highlight = if editing || response.hovered() {
-                                        Some(crate::palette::ACCOUNT_HOVER)
-                                    } else if self.page == Page::Accounts && self.account.as_ref() == Some(&account.id) {
+                                    let highlight = if self.page == Page::Accounts && self.account.as_ref() == Some(&account.id) {
                                         Some(crate::palette::SELECTED)
+                                    } else if editing || response.hovered() {
+                                        Some(crate::palette::ACCOUNT_HOVER)
                                     } else {
                                         None
                                     };

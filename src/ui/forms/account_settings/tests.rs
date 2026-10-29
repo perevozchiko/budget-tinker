@@ -139,6 +139,14 @@ fn sidebar_hover_and_right_click_keep_the_target_account_highlighted() {
         matches!(&shape.shape, egui::Shape::Rect(rect) if rect.fill == crate::palette::ACCOUNT_HOVER && rect.rect.contains(point))
     })
     };
+    let selected_is_dark = |output: &egui::FullOutput| {
+        output.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Rect(rect) if rect.fill == crate::palette::SELECTED && rect.rect.contains(selected_point)))
+    };
+    let output = h.render(vec![egui::Event::PointerMoved(selected_point)], true);
+    assert!(
+        selected_is_dark(&output),
+        "hovering the selected account must keep its dark color"
+    );
     let output = h.render(vec![egui::Event::PointerMoved(point)], true);
     assert!(highlighted(&output), "hover must visibly highlight the row");
     assert!(output.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Rect(rect) if rect.fill == crate::palette::SELECTED && rect.rect.contains(selected_point))), "the selected account must keep its darker color");
@@ -167,6 +175,35 @@ fn sidebar_hover_and_right_click_keep_the_target_account_highlighted() {
         "the edited account must stay highlighted after moving off its row"
     );
     assert!(h.app.undo.is_empty());
+    // Opening the selected account's popup must not replace its selection color either.
+    h.app.dialog = None;
+    h.render(vec![], true);
+    for pressed in [true, false] {
+        h.render(
+            vec![
+                egui::Event::PointerMoved(selected_point),
+                egui::Event::PointerButton {
+                    pos: selected_point,
+                    button: egui::PointerButton::Secondary,
+                    pressed,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+            true,
+        );
+    }
+    let output = h.render(
+        vec![egui::Event::PointerMoved(egui::pos2(600., 500.))],
+        true,
+    );
+    assert!(
+        selected_is_dark(&output),
+        "editing the selected account must keep its dark color"
+    );
+    assert!(
+        !highlighted(&output),
+        "the previous account's hover highlight must clear"
+    );
 }
 
 impl Drop for Harness {
