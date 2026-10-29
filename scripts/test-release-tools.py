@@ -27,6 +27,7 @@ def load(name):
 deps = load('audit-dependencies')
 source = load('audit-release')
 package = load('package-source')
+artifact_names = load('ci-artifact-name')
 
 
 class ReleasePolicyTests(unittest.TestCase):
@@ -78,6 +79,25 @@ class ReleasePolicyTests(unittest.TestCase):
                 platform + "' }}",
                 workflow,
             )
+
+    def test_ci_archive_naming_and_node24_actions(self):
+        workflow = (ROOT / '.github/workflows/rust.yml').read_text()
+        self.assertNotIn('actions/checkout@v4', workflow)
+        self.assertNotIn('actions/upload-artifact@v4', workflow)
+        self.assertEqual(workflow.count('actions/checkout@v6'), 5)
+        self.assertEqual(workflow.count('actions/upload-artifact@v6'), 4)
+        self.assertEqual(workflow.count('scripts/ci-artifact-name.py'), 3)
+        self.assertEqual(workflow.count('name: ${{ steps.package.outputs.stem }}'), 3)
+        self.assertEqual(workflow.count('path: ${{ steps.package.outputs.stem }}.zip'), 2)
+        self.assertIn('path: ${{ steps.package.outputs.stem }}.tar.gz', workflow)
+        self.assertEqual(
+            artifact_names.artifact_stem('0.1.0-alpha.1', 'a' * 40, 'macOS'),
+            'BudgetTinker-v0.1.0-alpha.1-aaaaaaa-macOS',
+        )
+        with self.assertRaises(ValueError):
+            artifact_names.artifact_stem('0.1.0-alpha.1', 'invalid', 'macOS')
+        with self.assertRaises(ValueError):
+            artifact_names.artifact_stem('0.1.0-alpha.1', 'a' * 40, 'unknown')
 
     def test_dotfiles_are_public_but_generated_data_and_mac_metadata_are_excluded(self):
         for name in ['.github/workflows/rust.yml', '.gitignore', '.gitattributes']:

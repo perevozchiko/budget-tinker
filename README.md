@@ -57,9 +57,12 @@ codesign --verify --deep --strict dist/BudgetTinker.app
 plutil -lint dist/BudgetTinker.app/Contents/Info.plist
 ```
 
-This creates a locally ad-hoc signed app; it is not Apple-notarized. CI is started only
-through **Actions → Run workflow**. Select all platforms or macOS, Linux or Windows;
-validation always runs. The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
+This creates a locally ad-hoc signed app; it is not Apple-notarized. Every push to
+`master` (including merged pull requests) automatically runs validation and all three
+desktop builds. For other branches use **Actions → Run workflow** to choose a branch and
+select all platforms or macOS, Linux or Windows; validation always runs. Artifacts and
+archives are named `BudgetTinker-v<version>-<7-character commit>-<platform>`; the app bundle
+and executable names inside archives remain unchanged. The private repository is [perevozchiko/budget-tinker](https://github.com/perevozchiko/budget-tinker),
 with `master` as its primary branch and an initial source commit. The project is not yet
 publicly released, and no GitHub Releases have been published.
 
