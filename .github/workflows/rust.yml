@@ -21,18 +21,6 @@ on:
           - linux
           - windows
 
-  # Used directly by Actions -> Release without relying on token-created push events.
-  workflow_call:
-    inputs:
-      platform:
-        type: string
-        required: false
-        default: all
-      release_ref:
-        type: string
-        required: false
-        default: ''
-
 permissions:
   contents: read
 
@@ -43,8 +31,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.release_ref || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -111,8 +97,6 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.release_ref || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Versioned package name
@@ -147,8 +131,6 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.release_ref || github.sha }}
       - name: Install native Linux build dependencies
         run: |
           sudo apt-get update
@@ -191,8 +173,6 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.release_ref || github.sha }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Versioned package name
@@ -234,8 +214,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.release_ref || github.sha }}
         with:
           fetch-depth: 0
       - name: Validate tag, version and master ancestry
