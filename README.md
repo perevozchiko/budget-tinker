@@ -112,7 +112,7 @@ cargo run --locked
 
 ## Downloads
 
-**[Download the latest GitHub release](https://github.com/perevozchiko/budget-tinker/releases/latest)** · [Browse all releases and pre-releases](https://github.com/perevozchiko/budget-tinker/releases)
+**[Download a BudgetTinker build](https://github.com/perevozchiko/budget-tinker/releases)** · [View tags and version history](https://github.com/perevozchiko/budget-tinker/tags)
 
 Release archives are built for:
 
